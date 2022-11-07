@@ -87,12 +87,15 @@ COSMOLOGY_CONSISTENCY_RELATIONS = [
     # ("h0", "(omnuh2/omega_nu)**0.5"),
     ("h0", "hubble/100"),
     ("hubble", "h0*100"),
-    ("omlamh2", "omega_lambda*h0*h0"),
-    ("omega_lambda", "omlamh2/h0/h0"),
-    ("omega_lambda", "1-omega_m-omega_k"),
-    ("omega_m", "1-omega_lambda-omega_k"),
-    ("omega_k", "1-omega_m-omega_lambda"),
-    ("K", "-hubble*hubble*omega_k/299792.458/299792.458"),
+    # HI_CLASS_NEW: for now I am commenting out all these consistency relations
+    # to include smg (hi_class) easily. The consistency is checked internally
+    # hi_class. (think better strategy)
+    # ("omlamh2", "omega_lambda*h0*h0"),
+    # ("omega_lambda", "omlamh2/h0/h0"),
+    # ("omega_lambda", "1-omega_m-omega_k"),
+    # ("omega_m", "1-omega_lambda-omega_k"),
+    # ("omega_k", "1-omega_m-omega_lambda"),
+    # ("K", "-hubble*hubble*omega_k/299792.458/299792.458"),
     ("omnuh2", "mnu/93.14"),
     ("mnu", "omnuh2*93.14"),
 ]
