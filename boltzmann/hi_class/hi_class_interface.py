@@ -161,7 +161,6 @@ def get_class_inputs(block, config):
         if key.startswith('hi_class_'):
             params[key[9:]] = val
 
-    print(params)
     return params
 
 
@@ -234,15 +233,27 @@ def get_class_outputs(block, c, config):
     # Distances and related quantities
     ##
 
+    # HI_CLASS_NEW: added: a, mu, H
     # save redshifts of samples
     block[distances, 'z'] = z
+    block[distances, 'a'] = 1/(z+1)
     block[distances, 'nz'] = nz
 
     # Save distance samples
-    block[distances, 'd_l'] = np.array([c.luminosity_distance(zi) for zi in z])
+    d_l = np.array([c.luminosity_distance(zi) for zi in z])
+    block[distances, 'd_l'] = d_l
     d_a = np.array([c.angular_distance(zi) for zi in z])
     block[distances, 'd_a'] = d_a
     block[distances, 'd_m'] = d_a * (1 + z)
+
+    # Deal with mu(0), which is -np.inf
+    mu = np.zeros_like(d_l)
+    pos = d_l > 0
+    mu[pos] = 5*np.log10(d_l[pos])+25
+    mu[~pos] = -np.inf
+    block[distances, 'mu'] = mu
+    H = np.array([c.Hubble(zi) for zi in z])
+    block[distances, 'H'] = H
 
     # Save some auxiliary related parameters
     block[distances, 'age'] = c.age()

@@ -115,6 +115,9 @@ outputs:
         z:
             meaning: Redshifts of samples
             type: real 1d
+        a:
+            meaning: Scale factor of samples
+            type: real 1d
         d_a:
             meaning: Angular diameter distance in Mpc
             type: real 1d
@@ -123,6 +126,12 @@ outputs:
             type: real 1d
         d_l:
             meaning: Luminosity distance in Mpc
+            type: real 1d
+        mu:
+            meaning: Distance modulus
+            type: real 1d
+        H:
+            meaning: Hubble parameter with in units of Mpc
             type: real 1d
         age:
             meaning: Age of universe in GYr
