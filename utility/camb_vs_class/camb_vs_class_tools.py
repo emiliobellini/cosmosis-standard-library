@@ -2,6 +2,7 @@ import argparse
 import configparser
 import copy
 import json
+import matplotlib.pyplot as plt
 import numpy as np
 import os
 import shutil
@@ -31,22 +32,9 @@ def argument_parser():
                         help='Parameters file (ini) for the reference code')
     parser.add_argument('params_2nd', type=str,
                         help='Parameters file (ini) for the second code')
-    parser.add_argument('--output_path', '-o', type=str, help='Output folder.')
+    parser.add_argument('--plots_path', '-p', type=str, help='Plots folder.')
     parser.add_argument('--save_plots', '-s', action='store_true', help='Save '
                         'plots without showing them (default: False).')
-    parser.add_argument('--type', '-t', type=str, help='Type of output to be '
-                        'plotted (e.g. matter_power_lin. distances). If left '
-                        'blank all the plots will be generated.')
-    parser.add_argument('--xvar', '-x', type=str, help='x coordinate in plot. '
-                        'If left blank all the plots will be generated.')
-    parser.add_argument('--yvar', '-y', type=str, help='y coordinate in plot. '
-                        'If left blank all the plots will be generated.')
-    parser.add_argument('--xscale', '-xs', type=str, help='x scale to be used.'
-                        ' (Default: there are default plotting scales '
-                        'depending on quantity).')
-    parser.add_argument('--yscale', '-ys', type=str, help='y scale to be used.'
-                        ' (Default: there are default plotting scales '
-                        'depending on quantity).')
     parser.add_argument('--verbose', '-v', action='store_true',
                         default=False, help='Regulate verbosity.')
 
@@ -404,17 +392,15 @@ class Code(object):
             joint.data[secname] = {}
             for keyname in joint.keys[secname]:
                 ndim = self.data[secname][keyname].ndim
-                if self._is_indep_var(keyname):
-                    joint.data[secname][keyname] = self.data[secname][keyname]
-                else:
-                    joint.data[secname][keyname] = {}
+                if not self._is_indep_var(keyname):
                     if ndim == 1:
                         xname = self._get_x_name(secname)
                         x1 = self.data[secname][xname]
                         y1 = self.data[secname][keyname]
                         x2 = code_2nd.data[secname][xname]
                         y2 = code_2nd.data[secname][keyname]
-                        _, res = rel_diff1d(x1, y1, x2, y2, ref=1)
+                        x, res = rel_diff1d(x1, y1, x2, y2, ref=1)
+                        joint.data[secname][xname] = x
                     elif ndim == 2:
                         z1 = self.data[secname][keyname]
                         z2 = code_2nd.data[secname][keyname]
@@ -424,8 +410,14 @@ class Code(object):
                         y1 = self.data[secname][yname]
                         x2 = code_2nd.data[secname][xname]
                         y2 = code_2nd.data[secname][yname]
-                        _, _, res = rel_diff2d(x1, y1, z1, x2, y2, z2, ref=1)
-                    joint.data[secname][keyname][code_2nd.name] = res
+                        x, y, res = rel_diff2d(x1, y1, z1, x2, y2, z2, ref=1)
+                        joint.data[secname][xname] = x
+                        joint.data[secname][yname] = y
+                    else:
+                        raise ValueError('Array {} in {} with {} '
+                                         'dimensions. Maximum 2 allowed'
+                                         ''.format(keyname, secname, ndim))
+                    joint.data[secname][keyname] = res
         joint.read_output = True
         return joint
 
@@ -474,3 +466,195 @@ class Code(object):
 
         only.read_output = True
         return only
+
+    def plot(self, other, diff=None, save=False, default_scales=None):
+
+        # Which plots
+        if diff:
+            keys_to_plot = copy.deepcopy(diff.keys)
+        else:
+            keys_to_plot = copy.deepcopy(self.diff_codes(other).keys)
+
+        # Create folder
+        if save:
+            try:
+                os.mkdir(self.path_plots)
+            except FileExistsError:
+                pass
+
+        # Main loop
+        for sec in keys_to_plot:
+            for key in keys_to_plot[sec]:
+                if not self._is_indep_var(key):
+                    ndim = self.data[sec][key].ndim
+                    if ndim == 1:
+                        # Values
+                        xname = self._get_x_name(sec)
+                        v1 = self.data[sec][xname], self.data[sec][key]
+                        v2 = other.data[sec][xname], other.data[sec][key]
+                        if diff:
+                            vd = diff.data[sec][xname], diff.data[sec][key]
+                        else:
+                            vd = None
+                        # Scales
+                        try:
+                            xscale = default_scales[sec][xname]
+                        except KeyError:
+                            xscale = 'linear'
+                        try:
+                            yscale = default_scales[sec][key]
+                        except KeyError:
+                            yscale = 'linear'
+                        # Save
+                        if save:
+                            name = '{}_{}_of_{}.pdf'.format(sec, key, xname)
+                            save_loc = os.path.join(self.path_plots, name)
+                        else:
+                            save_loc = None
+                        # Labels
+                        xlabel = xname
+                        ylabel = key
+                        title = sec
+                        v1label = self.name
+                        v2label = other.name
+                        # Plot
+                        plot1D(v1, v2, vd, v1label, v2label, xscale, yscale,
+                               xlabel, ylabel, title, save_loc)
+                        plt.close()
+
+                    elif ndim == 2:
+                        # Values
+                        z1 = self.data[sec][key]
+                        z2 = other.data[sec][key]
+                        xname, yname = \
+                            self._get_x_and_y_names(sec, z1.shape)
+                        x1 = self.data[sec][xname]
+                        y1 = self.data[sec][yname]
+                        x2 = other.data[sec][xname]
+                        y2 = other.data[sec][yname]
+                        v1 = x1, y1, z1
+                        v2 = x2, y2, z2
+                        if diff:
+                            xd = diff.data[sec][xname]
+                            yd = diff.data[sec][yname]
+                            zd = diff.data[sec][key]
+                            vd = xd, yd, zd
+                        else:
+                            vd = None
+                        # Scales
+                        try:
+                            xscale = default_scales[sec][xname]
+                        except KeyError:
+                            xscale = 'linear'
+                        try:
+                            yscale = default_scales[sec][yname]
+                        except KeyError:
+                            yscale = 'linear'
+                        try:
+                            zscale = default_scales[sec][key]
+                        except KeyError:
+                            zscale = 'linear'
+                        # Save
+                        if save:
+                            name = '{}_{}_of_{}_and_{}.pdf' \
+                                ''.format(sec, key, xname, yname)
+                            save_loc = os.path.join(self.path_plots, name)
+                        else:
+                            save_loc = None
+                        # Labels
+                        xlabel = xname
+                        ylabel = yname
+                        zlabel = key
+                        title = sec
+                        v1label = self.name
+                        v2label = other.name
+                        # Plot
+                        plot2D(v1, v2, vd, v1label, v2label, xscale, yscale,
+                               zscale, xlabel, ylabel, zlabel, title, save_loc)
+                        plt.close()
+
+                    else:
+                        raise ValueError('Array {} in {} with {} '
+                                         'dimensions. Maximum 2 allowed'
+                                         ''.format(key, sec, ndim))
+
+        return
+
+
+# ------------------- Plots --------------------------------------------------#
+
+
+def plot1D(v1, v2, vd, v1label, v2label, xscale, yscale, xlabel, ylabel, title,
+           save_loc):
+
+    # Create figure
+    plt.figure(1, figsize=(6, 6))
+    plt.tight_layout()
+
+    # Expand variables
+    x1, y1 = v1
+    x2, y2 = v2
+    if vd:
+        xd, yd = vd
+
+    if vd:
+        # First subplot
+        plt.subplot(211)
+
+    plt.plot(x1, y1, '-', label=v1label)
+    plt.plot(x2, y2, '--', label=v2label)
+    plt.xscale(xscale)
+    plt.yscale(yscale)
+    plt.ylabel(ylabel)
+    plt.title(title)
+    plt.legend(loc='best')
+
+    if vd:
+        # Second subplot
+        plt.subplot(212)
+
+        plt.plot(xd, 100*np.abs(yd), '-')
+        plt.xscale(xscale)
+        plt.xlabel(xlabel)
+        plt.ylabel('|diff| [%]')
+
+        # Plots adjustements
+
+        # Adjust separations between plots
+        plt.subplots_adjust(hspace=.0)
+
+        plt.figure(1)
+        # First sublopt
+        plt.subplot(211)
+        ax = plt.gca()
+        ax.set_xticklabels([])
+
+    if save_loc:
+        plt.savefig(save_loc, bbox_inches='tight')
+    else:
+        plt.show()
+
+    return
+
+
+def plot2D(v1, v2, vd, v1label, v2label, xscale, yscale, zscale, xlabel,
+           ylabel, zlabel, title, save_loc):
+
+    # Expand variables
+    x1, y1, z1 = v1
+    x2, y2, z2 = v2
+    if vd:
+        xd, yd, zd = vd
+
+    # TODO: For now I am just printing at z=0
+    ny = 0
+    new_title = '{}_at_{}_{}'.format(title, ylabel, int(y1[ny]))
+
+    vv1 = x1, z1[:, ny]
+    vv2 = x2, z2[:, ny]
+    if vd:
+        vvd = x2, z2[:, ny]
+    plot1D(vv1, vv2, vvd, v1label, v2label, xscale, zscale, xlabel, zlabel,
+           new_title, save_loc)
+
+    return
