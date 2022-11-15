@@ -36,12 +36,12 @@ default_scales = {
     'matter_power_lin': {
         'k_h': 'log',
         'p_k': 'log',
-        'z': 'log',
+        'z': 'linear',
     },
     'matter_power_nl': {
         'k_h': 'log',
         'p_k': 'log',
-        'z': 'log',
+        'z': 'linear',
     },
 }
 
@@ -77,8 +77,5 @@ if __name__ == '__main__':
         only_ref.print_keys()
 
     # Plots
-    if args.plots_path:
-        code_ref.path_plots = args.plots_path
-
-    code_ref.plot(code_2nd, diff=diff, save=args.save_plots,
-                  default_scales=default_scales)
+    code_ref.plot(args, other=code_2nd, diff=diff, scales=default_scales)
+    # code_ref.plot(args, other=None, diff=None, scales=default_scales)

@@ -32,9 +32,14 @@ def argument_parser():
                         help='Parameters file (ini) for the reference code')
     parser.add_argument('params_2nd', type=str,
                         help='Parameters file (ini) for the second code')
-    parser.add_argument('--plots_path', '-p', type=str, help='Plots folder.')
+    parser.add_argument('--path_plots', '-p', type=str, help='Plots folder.')
     parser.add_argument('--save_plots', '-s', action='store_true', help='Save '
                         'plots without showing them (default: False).')
+    parser.add_argument('--type', '-t', type=str, help='Type of output to be '
+                        'plotted (e.g. matter_power_lin. distances). If left '
+                        'blank all the plots will be generated.')
+    parser.add_argument('--key', '-k', type=str, help='key to plot. '
+                        'If left blank all the plots will be generated.')
     parser.add_argument('--verbose', '-v', action='store_true',
                         default=False, help='Regulate verbosity.')
 
@@ -43,14 +48,14 @@ def argument_parser():
 
 # ------------------- Relative differences -----------------------------------#
 
-def rel_diff1d(x1, y1, x2, y2, N=3e3, spacing='linear', epsilon=1e-5, ref=1):
+def rel_diff1d(x1, y1, x2, y2, N=3e3, scale='linear', eps=1e-5, ref=1):
     """ Relative difference between data vectors
 
     Args:
         x1,y1,x2,y2 (np array): data to interpolate.
         N (int): number of points on which to interpolate.
-        spacing (str): how to populate the interpolation (log or linear).
-        epsilon (float): cut the interval to avoid interpolation problems.
+        scale (str): how to populate the interpolation (log or linear).
+        eps (float): cut the interval to avoid interpolation problems.
         ref (int): if 0 the rel diff is calculated using N points with linear
             or log spacing, if 1 (2) the rel diff is calculated only at the
             points of model 1 (2).
@@ -61,8 +66,8 @@ def rel_diff1d(x1, y1, x2, y2, N=3e3, spacing='linear', epsilon=1e-5, ref=1):
     """
 
     # don't compute it many times, slow for long arrays
-    xmin = (1.+0*epsilon)*max(min(x1), min(x2))
-    xmax = (1.-0*epsilon)*min(max(x1), max(x2))
+    xmin = (1.+0*eps)*max(min(x1), min(x2))
+    xmax = (1.-0*eps)*min(max(x1), max(x2))
 
     data1 = interpolate.interp1d(x1, y1)
     data2 = interpolate.interp1d(x2, y2)
@@ -72,25 +77,28 @@ def rel_diff1d(x1, y1, x2, y2, N=3e3, spacing='linear', epsilon=1e-5, ref=1):
     elif ref == 2:
         range = np.array([x for x in x2 if xmin <= x <= xmax])
     else:
-        if spacing == 'linear':
+        if scale == 'linear':
             range = np.linspace(xmin, xmax, int(N))
         else:
             range = np.exp(np.linspace(np.log(xmin), np.log(xmax), int(N)))
 
-    diff = np.array([data2(x)/data1(x)-1. for x in range])
-
+    d1 = np.array([data1(x) for x in range])
+    d2 = np.array([data2(x) for x in range])
+    diff = np.zeros_like(d1)
+    for nx, x in enumerate(range):
+        if d1[nx] != d2[nx]:
+            diff[nx] = d2[nx]/d1[nx]-1.
     return range, diff
 
 
-def rel_diff2d(x1, y1, z1, x2, y2, z2,
-               N=3e2, spacing='linear', epsilon=1e-5, ref=1):
+def rel_diff2d(x1, y1, z1, x2, y2, z2, N=3e2, scale='linear', eps=1e-5, ref=1):
     """ Relative difference between data vectors
 
     Args:
         x1,y1,z1,x2,y2,z2 (np array): data to interpolate.
         N (int): number of points on which to interpolate.
         spacing (str): how to populate the interpolation (log or linear).
-        epsilon (float): cut the interval to avoid interpolation problems.
+        eps (float): cut the interval to avoid interpolation problems.
         ref (int): if 0 the rel diff is calculated using N points with linear
             or log spacing, if 1 (2) the rel diff is calculated only at the
             points of model 1 (2).
@@ -101,10 +109,10 @@ def rel_diff2d(x1, y1, z1, x2, y2, z2,
     """
 
     # don't compute it many times, slow for long arrays
-    xmin = (1.+0*epsilon)*max(min(x1), min(x2))
-    xmax = (1.-0*epsilon)*min(max(x1), max(x2))
-    ymin = (1.+0*epsilon)*max(min(y1), min(y2))
-    ymax = (1.-0*epsilon)*min(max(y1), max(y2))
+    xmin = (1.+0*eps)*max(min(x1), min(x2))
+    xmax = (1.-0*eps)*min(max(x1), max(x2))
+    ymin = (1.+0*eps)*max(min(y1), min(y2))
+    ymax = (1.-0*eps)*min(max(y1), max(y2))
 
     # consider providing z.T arrays directly as input
     data1 = interpolate.interp2d(x1, y1, z1.T)
@@ -117,7 +125,7 @@ def rel_diff2d(x1, y1, z1, x2, y2, z2,
         range_x = np.array([x for x in x2 if xmin <= x <= xmax])
         range_y = np.array([y for y in y2 if ymin <= y <= ymax])
     else:
-        if spacing == 'linear':
+        if scale == 'linear':
             range_x = np.linspace(xmin, xmax, int(N))
             range_y = np.linspace(ymin, ymax, int(N))
         else:
@@ -126,8 +134,11 @@ def rel_diff2d(x1, y1, z1, x2, y2, z2,
 
     diff = np.zeros((range_x.shape[0], range_y.shape[0]))
     for nx, x in enumerate(range_x):
-        diff[nx] = np.array([data2(x, y)/data1(x, y)-1. for y in range_y]).T
-
+        d1 = np.array([data1(x, y) for y in range_y])
+        d2 = np.array([data2(x, y) for y in range_y])
+        for ny, y in enumerate(range_y):
+            if d1[ny] != d2[ny]:
+                diff[nx, ny] = d2[ny]/d1[ny]-1.
     return range_x, range_y, diff
 
 
@@ -147,6 +158,9 @@ class Code(object):
         self.data = {}
         # Settings
         self._indep_vars = ['ell', 'z', 'k_h']
+        # Plots
+        self.vars_plots = {}
+        self.scales_plots = {}
         return None
 
     def _initialize_with_ini(self, path_ini):
@@ -238,6 +252,47 @@ class Code(object):
         else:
             return False
 
+    def _get_dict_plot(self, sec, key, ndim, code=None):
+        v = {}
+        if code:
+            tp = code
+        else:
+            tp = self
+        try:
+            v['key'] = tp.data[sec][key]
+        except KeyError:
+            return
+        if ndim == 1:
+            xname = self._get_x_name(sec)
+        elif ndim == 2:
+            xname, yname = \
+                self._get_x_and_y_names(sec, v['key'].shape, code=code)
+            v['y'] = tp.data[sec][yname]
+        v['x'] = tp.data[sec][xname]
+        # Scales
+        try:
+            v['xscale'] = tp.scales_plots[sec][xname]
+        except KeyError:
+            v['xscale'] = 'linear'
+        try:
+            v['keyscale'] = tp.scales_plots[sec][key]
+        except KeyError:
+            v['keyscale'] = 'linear'
+        # Labels
+        v['xlabel'] = xname
+        v['keylabel'] = key
+        v['title'] = sec
+        v['name'] = tp.name
+
+        if ndim == 2:
+            try:
+                v['yscale'] = tp.scales_plots[sec][yname]
+            except KeyError:
+                v['yscale'] = 'linear'
+            v['ylabel'] = yname
+
+        return v
+
     def _get_x_name(self, secname):
         set1 = set(self._indep_vars)
         set2 = set(self.data[secname].keys())
@@ -248,18 +303,27 @@ class Code(object):
             raise IOError('Incorrect number of dimensions. Wanted 1, '
                           'got {}'.format(len(inter)))
 
-    def _get_x_and_y_names(self, secname, zshape):
-        set1 = set(self._indep_vars)
-        set2 = set(self.data[secname].keys())
+    def _get_x_and_y_names(self, secname, zshape, code=None):
+        if code:
+            tp = code
+        else:
+            tp = self
+        set1 = set(tp._indep_vars)
+        set2 = set(tp.data[secname].keys())
         inter = list(set1 & set2)
         if len(inter) == 2:
-            if len(self.data[secname][inter[0]]) == zshape[0]:
+            if len(tp.data[secname][inter[0]]) == zshape[0]:
                 return inter[0], inter[1]
             else:
                 return inter[1], inter[0]
         else:
             raise IOError('Incorrect number of dimensions. Wanted 2, '
                           'got {}'.format(len(inter)))
+
+    def _warn(self, msg):
+        w = self._print_bf('----> WARNING:')
+        print(w + ' ' + msg)
+        return
 
     def run(self, verbose=False, fake=False):
         """
@@ -280,8 +344,8 @@ class Code(object):
 
         output = self._path_exists_or_none(self.path_data)
         if output:
-            print('WARNING: output path {} already existent. '
-                  'Removing files!'.format(self._print_bf(output)))
+            self._warn('output path {} already existent. '
+                       'Removing files!'.format(self._print_bf(output)))
             shutil.rmtree(output)
 
         out = sp.run(['cosmosis', self.path_ini],
@@ -404,15 +468,19 @@ class Code(object):
                     elif ndim == 2:
                         z1 = self.data[secname][keyname]
                         z2 = code_2nd.data[secname][keyname]
-                        xname, yname = \
-                            self._get_x_and_y_names(secname, z1.shape)
-                        x1 = self.data[secname][xname]
-                        y1 = self.data[secname][yname]
-                        x2 = code_2nd.data[secname][xname]
-                        y2 = code_2nd.data[secname][yname]
+                        xname_ref, yname_ref = \
+                            self._get_x_and_y_names(secname, z1.shape,
+                                                    code=None)
+                        xname_2nd, yname_2nd = \
+                            self._get_x_and_y_names(secname, z2.shape,
+                                                    code=code_2nd)
+                        x1 = self.data[secname][xname_ref]
+                        y1 = self.data[secname][yname_ref]
+                        x2 = code_2nd.data[secname][xname_2nd]
+                        y2 = code_2nd.data[secname][yname_2nd]
                         x, y, res = rel_diff2d(x1, y1, z1, x2, y2, z2, ref=1)
-                        joint.data[secname][xname] = x
-                        joint.data[secname][yname] = y
+                        joint.data[secname][xname_ref] = x
+                        joint.data[secname][yname_ref] = y
                     else:
                         raise ValueError('Array {} in {} with {} '
                                          'dimensions. Maximum 2 allowed'
@@ -467,158 +535,122 @@ class Code(object):
         only.read_output = True
         return only
 
-    def plot(self, other, diff=None, save=False, default_scales=None):
+    def setup_plots(self, args, scales):
+        # Save
+        if args.path_plots:
+            self.path_plots = args.path_plots
+        # Variables and checks
+        if args.type and not args.key:
+            self._warn('missing key but type specified. '
+                       'Plotting all the variables!')
+        elif args.key and not args.type:
+            self._warn('missing type but key specified. '
+                       'Plotting all the variables!')
+        elif args.type and args.key:
+            self.vars_plots[args.type] = [args.key]
+        self.scales_plots = scales
+        return
 
-        # Which plots
-        if diff:
-            keys_to_plot = copy.deepcopy(diff.keys)
-        else:
-            keys_to_plot = copy.deepcopy(self.diff_codes(other).keys)
+    def plot(self, args, other=None, diff=None, scales=None):
+
+        # Setup (which plots)
+        self.setup_plots(args, scales)
+        if not self.vars_plots:
+            if diff:
+                keys = diff.keys
+            else:
+                keys = self.keys
+            for sec in keys.keys():
+                self.vars_plots[sec] = []
+                for key in keys[sec]:
+                    if not self._is_indep_var(key):
+                        self.vars_plots[sec].append(key)
 
         # Create folder
-        if save:
+        if args.save_plots:
             try:
                 os.mkdir(self.path_plots)
             except FileExistsError:
                 pass
 
         # Main loop
-        for sec in keys_to_plot:
-            for key in keys_to_plot[sec]:
-                if not self._is_indep_var(key):
-                    ndim = self.data[sec][key].ndim
-                    if ndim == 1:
-                        # Values
-                        xname = self._get_x_name(sec)
-                        v1 = self.data[sec][xname], self.data[sec][key]
-                        v2 = other.data[sec][xname], other.data[sec][key]
-                        if diff:
-                            vd = diff.data[sec][xname], diff.data[sec][key]
-                        else:
-                            vd = None
-                        # Scales
-                        try:
-                            xscale = default_scales[sec][xname]
-                        except KeyError:
-                            xscale = 'linear'
-                        try:
-                            yscale = default_scales[sec][key]
-                        except KeyError:
-                            yscale = 'linear'
-                        # Save
-                        if save:
-                            name = '{}_{}_of_{}.pdf'.format(sec, key, xname)
-                            save_loc = os.path.join(self.path_plots, name)
-                        else:
-                            save_loc = None
-                        # Labels
-                        xlabel = xname
-                        ylabel = key
-                        title = sec
-                        v1label = self.name
-                        v2label = other.name
-                        # Plot
-                        plot1D(v1, v2, vd, v1label, v2label, xscale, yscale,
-                               xlabel, ylabel, title, save_loc)
-                        plt.close()
-
-                    elif ndim == 2:
-                        # Values
-                        z1 = self.data[sec][key]
-                        z2 = other.data[sec][key]
-                        xname, yname = \
-                            self._get_x_and_y_names(sec, z1.shape)
-                        x1 = self.data[sec][xname]
-                        y1 = self.data[sec][yname]
-                        x2 = other.data[sec][xname]
-                        y2 = other.data[sec][yname]
-                        v1 = x1, y1, z1
-                        v2 = x2, y2, z2
-                        if diff:
-                            xd = diff.data[sec][xname]
-                            yd = diff.data[sec][yname]
-                            zd = diff.data[sec][key]
-                            vd = xd, yd, zd
-                        else:
-                            vd = None
-                        # Scales
-                        try:
-                            xscale = default_scales[sec][xname]
-                        except KeyError:
-                            xscale = 'linear'
-                        try:
-                            yscale = default_scales[sec][yname]
-                        except KeyError:
-                            yscale = 'linear'
-                        try:
-                            zscale = default_scales[sec][key]
-                        except KeyError:
-                            zscale = 'linear'
-                        # Save
-                        if save:
-                            name = '{}_{}_of_{}_and_{}.pdf' \
-                                ''.format(sec, key, xname, yname)
-                            save_loc = os.path.join(self.path_plots, name)
-                        else:
-                            save_loc = None
-                        # Labels
-                        xlabel = xname
-                        ylabel = yname
-                        zlabel = key
-                        title = sec
-                        v1label = self.name
-                        v2label = other.name
-                        # Plot
-                        plot2D(v1, v2, vd, v1label, v2label, xscale, yscale,
-                               zscale, xlabel, ylabel, zlabel, title, save_loc)
-                        plt.close()
-
-                    else:
-                        raise ValueError('Array {} in {} with {} '
-                                         'dimensions. Maximum 2 allowed'
-                                         ''.format(key, sec, ndim))
+        for sec in self.vars_plots.keys():
+            for key in self.vars_plots[sec]:
+                ndim = self.data[sec][key].ndim
+                v1 = self._get_dict_plot(sec, key, ndim, code=None)
+                if other:
+                    v2 = self._get_dict_plot(sec, key, ndim, code=other)
+                else:
+                    v2 = None
+                if diff:
+                    vd = self._get_dict_plot(sec, key, ndim, code=diff)
+                else:
+                    vd = None
+                if ndim == 1:
+                    plot1D(v1, v2, vd)
+                elif ndim == 2:
+                    plot2D(v1, v2, vd)
+                else:
+                    raise ValueError('Array {} in {} with {} '
+                                     'dimensions. Maximum 2 allowed'
+                                     ''.format(key, sec, ndim))
+                if args.save_plots:
+                    fname = '{}_{}.pdf'.format(sec, key)
+                    save_loc = os.path.join(self.path_plots, fname)
+                    plt.savefig(save_loc, bbox_inches='tight')
+                else:
+                    plt.show()
+                plt.close()
 
         return
 
 
 # ------------------- Plots --------------------------------------------------#
 
+def plot1D(v1, v2, vd):
 
-def plot1D(v1, v2, vd, v1label, v2label, xscale, yscale, xlabel, ylabel, title,
-           save_loc):
+    # Plot limits
+    if v2:
+        xlimmin = min(v1['x'].min(), v2['x'].min())
+        xlimmax = max(v1['x'].max(), v2['x'].max())
+    else:
+        xlimmin, xlimmax = v1['x'].min(), v1['x'].max()
 
     # Create figure
-    plt.figure(1, figsize=(6, 6))
-    plt.tight_layout()
-
-    # Expand variables
-    x1, y1 = v1
-    x2, y2 = v2
     if vd:
-        xd, yd = vd
+        sizey = 4
+    else:
+        sizey = 3
+    plt.figure(1, figsize=(6, sizey))
+    plt.tight_layout()
 
     if vd:
         # First subplot
         plt.subplot(211)
 
-    plt.plot(x1, y1, '-', label=v1label)
-    plt.plot(x2, y2, '--', label=v2label)
-    plt.xscale(xscale)
-    plt.yscale(yscale)
-    plt.ylabel(ylabel)
-    plt.title(title)
+    plt.plot(v1['x'], v1['key'], '-', label=v1['name'])
+    if v2:
+        try:
+            plt.plot(v2['x'], v2['key'], '--', label=v2['name'])
+        except KeyError:
+            pass
+
+    plt.xlim(xlimmin, xlimmax)
+    plt.xscale(v1['xscale'])
+    plt.yscale(v1['keyscale'])
+    plt.ylabel(v1['keylabel'])
+    plt.title(v1['title'])
     plt.legend(loc='best')
 
     if vd:
         # Second subplot
         plt.subplot(212)
 
-        plt.plot(xd, 100*np.abs(yd), '-')
-        plt.xscale(xscale)
-        plt.xlabel(xlabel)
+        plt.plot(vd['x'], 100*np.abs(vd['key']), 'k-')
+        plt.xlim(xlimmin, xlimmax)
+        plt.xscale(v1['xscale'])
+        plt.xlabel(v1['xlabel'])
         plt.ylabel('|diff| [%]')
-
-        # Plots adjustements
 
         # Adjust separations between plots
         plt.subplots_adjust(hspace=.0)
@@ -629,32 +661,182 @@ def plot1D(v1, v2, vd, v1label, v2label, xscale, yscale, xlabel, ylabel, title,
         ax = plt.gca()
         ax.set_xticklabels([])
 
-    if save_loc:
-        plt.savefig(save_loc, bbox_inches='tight')
-    else:
-        plt.show()
-
     return
 
 
-def plot2D(v1, v2, vd, v1label, v2label, xscale, yscale, zscale, xlabel,
-           ylabel, zlabel, title, save_loc):
+def plot2D(v1, v2, vd):
 
-    # Expand variables
-    x1, y1, z1 = v1
-    x2, y2, z2 = v2
+    # Preliminary checks and adjustments
+    if v2:
+        if v2['xlabel'] == v1['ylabel']:
+            v2['xlabel_tmp'] = v2['xlabel']
+            v2['xlabel'] = v2['ylabel']
+            v2['ylabel'] = v2['xlabel_tmp']
+            v2.pop('xlabel_tmp')
+            v2['xscale_tmp'] = v2['xscale']
+            v2['xscale'] = v2['yscale']
+            v2['yscale'] = v2['xscale_tmp']
+            v2.pop('xscale_tmp')
+            v2['x_tmp'] = copy.deepcopy(v2['x'])
+            v2['x'] = copy.deepcopy(v2['y'])
+            v2['y'] = copy.deepcopy(v2['x_tmp'])
+            v2.pop('x_tmp')
     if vd:
-        xd, yd, zd = vd
+        if vd['xlabel'] == v1['ylabel']:
+            vd['xlabel_tmp'] = vd['xlabel']
+            vd['xlabel'] = vd['ylabel']
+            vd['ylabel'] = vd['xlabel_tmp']
+            vd.pop('xlabel_tmp')
+            vd['xscale_tmp'] = vd['xscale']
+            vd['xscale'] = vd['yscale']
+            vd['yscale'] = vd['xscale_tmp']
+            vd.pop('xscale_tmp')
+            vd['x_tmp'] = copy.deepcopy(vd['x'])
+            vd['x'] = copy.deepcopy(vd['y'])
+            vd['y'] = copy.deepcopy(vd['x_tmp'])
+            vd.pop('x_tmp')
 
-    # TODO: For now I am just printing at z=0
-    ny = 0
-    new_title = '{}_at_{}_{}'.format(title, ylabel, int(y1[ny]))
-
-    vv1 = x1, z1[:, ny]
-    vv2 = x2, z2[:, ny]
+    # Create figure
     if vd:
-        vvd = x2, z2[:, ny]
-    plot1D(vv1, vv2, vvd, v1label, v2label, xscale, zscale, xlabel, zlabel,
-           new_title, save_loc)
+        sizey = 8
+    else:
+        sizey = 6
+    plt.figure(1, figsize=(12, sizey))
+    plt.tight_layout()
+
+    # Plot limits
+    if vd:
+        xmin, xmax = vd['x'].min(), vd['x'].max()
+        ymin, ymax = vd['y'].min(), vd['y'].max()
+    elif v2:
+        xmin = max(v1['x'].min(), v2['x'].min())
+        xmax = min(v1['x'].max(), v2['x'].max())
+        ymin = max(v1['y'].min(), v2['y'].min())
+        ymax = min(v1['y'].max(), v2['y'].max())
+    else:
+        xmin, xmax = v1['x'].min(), v1['x'].max()
+        ymin, ymax = v1['y'].min(), v1['y'].max()
+    if v2:
+        xlimmin = min(v1['x'].min(), v2['x'].min())
+        xlimmax = max(v1['x'].max(), v2['x'].max())
+        ylimmin = min(v1['y'].min(), v2['y'].min())
+        ylimmax = max(v1['y'].max(), v2['y'].max())
+    else:
+        xlimmin, xlimmax = xmin, xmax
+        ylimmin, ylimmax = ymin, ymax
+
+    # First subplot
+    plt.subplot(221)
+
+    d1 = np.array([interpolate.interp1d(v1['y'], v1['key'][nx])
+                  for nx, x in enumerate(v1['x'])])
+    d1_max = np.array([d(ymax) for d in d1])
+    d1_min = np.array([d(ymin) for d in d1])
+    d1_label_min = '{}_{}_{:.2e}'.format(v1['name'], v1['ylabel'], ymin)
+    d1_label_max = '{}_{}_{:.2e}'.format(v1['name'], v1['ylabel'], ymax)
+
+    plt.plot(v1['x'], d1_min, '-', label=d1_label_min)
+    plt.plot(v1['x'], d1_max, '-', label=d1_label_max)
+
+    if v2:
+        d2 = np.array([interpolate.interp1d(v2['y'], v2['key'][nx])
+                      for nx, x in enumerate(v2['x'])])
+        d2_max = np.array([d(ymax) for d in d2])
+        d2_min = np.array([d(ymin) for d in d2])
+        d2_label_min = '{}_{}_{:.2e}'.format(v2['name'], v2['ylabel'], ymin)
+        d2_label_max = '{}_{}_{:.2e}'.format(v2['name'], v2['ylabel'], ymax)
+
+        plt.plot(v2['x'], d2_min, ':', label=d2_label_min)
+        plt.plot(v2['x'], d2_max, ':', label=d2_label_max)
+
+    plt.xlim(xlimmin, xlimmax)
+    plt.xscale(v1['xscale'])
+    plt.yscale(v1['keyscale'])
+    plt.ylabel(v1['keylabel'])
+    plt.title(v1['title'])
+    plt.legend(loc='best')
+
+    # Second subplot
+    plt.subplot(222)
+
+    d1 = np.array([interpolate.interp1d(v1['x'], v1['key'][:, ny])
+                  for ny, y in enumerate(v1['y'])])
+    d1_max = np.array([d(xmax) for d in d1])
+    d1_min = np.array([d(xmin) for d in d1])
+    d1_label_min = '{}_{}_{:.2e}'.format(v1['name'], v1['xlabel'], xmin)
+    d1_label_max = '{}_{}_{:.2e}'.format(v1['name'], v1['xlabel'], xmax)
+
+    plt.plot(v1['y'], d1_min, '-', label=d1_label_min)
+    plt.plot(v1['y'], d1_max, '-', label=d1_label_max)
+
+    if v2:
+        d2 = np.array([interpolate.interp1d(v2['x'], v2['key'][:, ny])
+                      for ny, y in enumerate(v2['y'])])
+        d2_max = np.array([d(xmax) for d in d2])
+        d2_min = np.array([d(xmin) for d in d2])
+        d2_label_min = '{}_{}_{:.2e}'.format(v2['name'], v2['xlabel'], xmin)
+        d2_label_max = '{}_{}_{:.2e}'.format(v2['name'], v2['xlabel'], xmax)
+
+        plt.plot(v2['y'], d2_min, ':', label=d2_label_min)
+        plt.plot(v2['y'], d2_max, ':', label=d2_label_max)
+
+    plt.xlim(ylimmin, ylimmax)
+    plt.xscale(v1['yscale'])
+    plt.yscale(v1['keyscale'])
+    plt.ylabel(v1['keylabel'])
+    plt.title(v1['title'])
+    plt.legend(loc='best')
+
+    if vd:
+        # Third subplot
+        plt.subplot(223)
+
+        dd = np.array([interpolate.interp1d(vd['y'], vd['key'][nx])
+                      for nx, x in enumerate(vd['x'])])
+        dd_max = np.array([d(ymax) for d in dd])
+        dd_min = np.array([d(ymin) for d in dd])
+        dd_label_min = '{}_{}_{:.2e}'.format(vd['name'], vd['ylabel'], ymin)
+        dd_label_max = '{}_{}_{:.2e}'.format(vd['name'], vd['ylabel'], ymax)
+
+        plt.plot(vd['x'], 100*np.abs(dd_min), '-', label=dd_label_min)
+        plt.plot(vd['x'], 100*np.abs(dd_max), '--', label=dd_label_max)
+
+        plt.xlim(xlimmin, xlimmax)
+        plt.xscale(v1['xscale'])
+        plt.xlabel(v1['xlabel'])
+        plt.ylabel('|diff| [%]')
+        plt.legend(loc='best')
+
+        # Fourth subplot
+        plt.subplot(224)
+
+        dd = np.array([interpolate.interp1d(vd['x'], vd['key'][:, ny])
+                      for ny, y in enumerate(vd['y'])])
+        dd_max = np.array([d(xmax) for d in dd])
+        dd_min = np.array([d(xmin) for d in dd])
+        dd_label_min = '{}_{}_{:.2e}'.format(vd['name'], vd['xlabel'], xmin)
+        dd_label_max = '{}_{}_{:.2e}'.format(vd['name'], vd['xlabel'], xmax)
+
+        plt.plot(vd['y'], 100*np.abs(dd_min), '-', label=dd_label_min)
+        plt.plot(vd['y'], 100*np.abs(dd_max), '--', label=dd_label_max)
+
+        plt.xlim(ylimmin, ylimmax)
+        plt.xscale(v1['yscale'])
+        plt.xlabel(vd['ylabel'])
+        plt.ylabel('|diff| [%]')
+        plt.legend(loc='best')
+
+        # Adjust separations between plots
+        plt.subplots_adjust(hspace=.0)
+
+        plt.figure(1)
+        # First sublopt
+        plt.subplot(221)
+        ax = plt.gca()
+        ax.set_xticklabels([])
+        # Second sublopt
+        plt.subplot(222)
+        ax = plt.gca()
+        ax.set_xticklabels([])
 
     return
