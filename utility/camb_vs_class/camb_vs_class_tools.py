@@ -168,7 +168,7 @@ class Code(object):
         Initialize Class attributes with ini_file
         """
         if not os.path.isfile(path_ini):
-            raise IOError('Ini file not found at {}'.format(self.path_ini))
+            raise IOError('Ini file not found at {}'.format(path_ini))
         self.path_ini = os.path.abspath(path_ini)
         self.content_ini = self._read_ini()
         self.name = self._get_name()
