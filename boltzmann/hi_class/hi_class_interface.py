@@ -59,11 +59,12 @@ def setup(options):
     # All these parameters should be written in the [hi_class] section of
     # the ini file.
     for _, key in options.keys(option_section):
-        if key.startswith('class_'):
+        if key.startswith('class_') or key.startswith('hi_class_'):
             config[key] = options[option_section, key]
-    for _, key in options.keys(option_section):
-        if key.startswith('hi_class_'):
-            config[key] = options[option_section, key]
+            # HI_CLASS_NEW: classy does not like True/False as inputs, we
+            # need to reconvert them back to yes/no
+            if type(config[key]) == bool:
+                config[key] = 'yes' if config[key] else 'no'
 
     # Create the object that connects to Class
     config['cosmo'] = classy.Class()
@@ -145,21 +146,30 @@ def get_class_inputs(block, config):
     # parameter is typical of hi_class put it inside the if statement, if it
     # is a standard Class parameter write it outside.
     if block.has_value(cosmo, 'omega_smg') and block[cosmo, 'omega_smg'] < 0.:
+        # These are mandatory
         params['Omega_Lambda'] = block[cosmo, 'omega_lambda']
         params['Omega_smg'] = block[cosmo, 'omega_smg']
         params['Omega_fld'] = block[cosmo, 'omega_fld']
-        params['parameters_smg'] = get_arrays_class(block, 'parameters_smg')
-        params['expansion_smg'] = get_arrays_class(block, 'expansion_smg')
+        # These are optional
+        try_to_get_arrays_class(params, block, 'mgclass_spline_z_smg')
+        try_to_get_arrays_class(params, block, 'mgclass_spline_dmu_smg')
+        try_to_get_arrays_class(params, block, 'mgclass_spline_dgamma_smg')
+        try_to_get_arrays_class(params, block, 'mgclass_spline_dsigma_smg')
+        try_to_get_arrays_class(params, block, 'parameters_smg')
+        try_to_get_arrays_class(params, block, 'expansion_smg')
 
-    # HI_CLASS_NEW: all the configuration parameters that start with class_ or
-    # hi_class_ are now written in the param dictionary without the prefix, to
-    # be used during the (hi_)class run.
-    for key, val in config.items():
-        if key.startswith('class_'):
-            params[key[6:]] = val
-    for key, val in config.items():
-        if key.startswith('hi_class_'):
-            params[key[9:]] = val
+        # HI_CLASS_NEW: all the configuration parameters that start with
+        # class_ or hi_class_ are now written in the param dictionary without
+        # the prefix, to be used during the (hi_)class run.
+        for key, val in config.items():
+            if key.startswith('class_'):
+                params[key[6:]] = val
+            if key.startswith('hi_class_'):
+                params[key[9:]] = val
+
+        # HI_CLASS_NEW: Adjust here config keys
+        # (e.g. the parser is case insensitive).
+        try_to_change_name(params, 'use_sigma', 'use_Sigma')
 
     return params
 
@@ -323,3 +333,21 @@ def get_arrays_class(block, name):
         count += 1
     str_array = ", ".join(map(str, array))
     return str_array
+
+
+def try_to_get_arrays_class(params, block, name, name_save=None):
+    if not name_save:
+        name_save = name
+    value = get_arrays_class(block, name)
+    if value:
+        params[name_save] = value
+    return
+
+
+def try_to_change_name(params, name_old, name_new):
+    try:
+        params[name_new] = params[name_old]
+        params.pop(name_old)
+    except KeyError:
+        pass
+    return
