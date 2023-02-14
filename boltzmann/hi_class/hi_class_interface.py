@@ -225,7 +225,10 @@ def get_class_outputs(block, c, config):
         D = [c.scale_independent_growth_factor(zi) for zi in z]
         f = [c.scale_independent_growth_factor_f(zi) for zi in z]
         # fsigma = [c.effective_f_sigma8(zi) for zi in z]
-        sigma_8_z = [c.sigma(8.0, zi, h_units=True) for zi in z]
+        # HI_CLASS_NEW: providing R in units of Mpc/h for backward
+        # compatibility
+        # sigma_8_z = [c.sigma(8.0, zi, h_units=True) for zi in z]
+        sigma_8_z = [c.sigma(8.0/h0, zi) for zi in z]
         block[names.growth_parameters, "z"] = z
         block[names.growth_parameters, "sigma_8"] = np.array(sigma_8_z)
         block[names.growth_parameters, "fsigma_8"] = np.array(sigma_8_z)
