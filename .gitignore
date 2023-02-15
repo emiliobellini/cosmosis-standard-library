@@ -26,3 +26,9 @@ likelihood/planck2015/plc-2.0/share/
 boltzmann/hi_class/hi_class_pub_devel/
 likelihood/planck2018/baseline/
 likelihood/planck2018/COM_Likelihood_Data-baseline_R3.00.tar.gz
+
+
+hi_class_ini/*.ini
+!hi_class_ini/planck_emcee.ini
+!hi_class_ini/planck_test.ini
+!hi_class_ini/planck_values.ini
