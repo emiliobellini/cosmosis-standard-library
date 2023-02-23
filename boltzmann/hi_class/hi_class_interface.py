@@ -291,8 +291,12 @@ def get_class_outputs(block, c, config):
         f = ell * (ell + 1.0) / 2 / np.pi * tcmb_muk**2
 
         # Save each of the four spectra
+        if config['lensing']:
+            for s in ['pp']:
+                block[cmb_cl, s] = c_ell_data[s][2:] / 2 / np.pi *  ell * (ell + 1.0)
+       
         for s in ['tt', 'ee', 'te', 'bb']:
-            block[cmb_cl, s] = c_ell_data[s][2:] * f
+                block[cmb_cl, s] = c_ell_data[s][2:] * f
 
 
 def execute(block, config):

@@ -169,3 +169,9 @@ outputs:
             meaning: ell * (ell+1) C_ell^TE / 2 pi in mu K^2. Only if mode=cmb or
                 all
             type: real 1d
+
+        pp:
+            meaning: 'Phi-Phi lensing spectrum; note ell scaling: ell * (ell+1) C_ell^PhiPhi.
+                Only if mode=cmb or all'
+            type: real 1d
+
