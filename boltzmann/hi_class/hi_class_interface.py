@@ -195,6 +195,8 @@ def get_class_outputs(block, c, config):
     z = np.arange(0.0, config["zmax"] + dz, dz)
     k = np.logspace(np.log10(kmin), np.log10(kmax), nk)
     nz = len(z)
+    # HI_CLASS_NEW: k_fiducial for scale dependent growth factor
+    k_fiducial = 1.e-2
 
     # Extract (interpolate) P(k,z) at the requested
     # sample points.
@@ -222,8 +224,39 @@ def get_class_outputs(block, c, config):
                            'p_k', P.T*h0**3)
 
         # Get growth rates and sigma_8
-        D = [c.scale_independent_growth_factor(zi) for zi in z]
-        f = [c.scale_independent_growth_factor_f(zi) for zi in z]
+        # D_ref = [c.scale_independent_growth_factor(zi) for zi in z]
+        # f_ref = [c.scale_independent_growth_factor_f(zi) for zi in z]
+        # HI_CLASS_NEW: scale dependent growth factor
+        D = [c.scale_dependent_growth_factor_at_k_and_z(
+            k_fiducial, zi) for zi in z]
+        f = [c.scale_dependent_growth_factor_f_at_k_and_z(
+            k_fiducial, zi, z_step=0.1) for zi in z]
+        # HI_CLASS_NEW: uncomment to see plots of
+        # relative diff between old an new growth rates
+        # import matplotlib.pyplot as plt
+        # plt.figure(1, figsize=(10, 8))
+        # plt.subplot(211)
+        # plt.plot(z, D_ref, label='back')
+        # plt.plot(z, D, '--', label='pert(k={:.2e})'.format(k_fiducial))
+        # plt.ylabel('D')
+        # plt.legend(loc='best')
+        # plt.subplot(212)
+        # plt.plot(z, np.array(D)/np.array(D_ref)-1.)
+        # plt.ylabel('rel_diff')
+        # plt.subplots_adjust(hspace=.0)
+        # plt.show()
+        # plt.figure(1, figsize=(10, 8))
+        # plt.subplot(211)
+        # plt.plot(z, f_ref, label='back')
+        # plt.plot(z, f, '--', label='pert(k={:.2e})'.format(k_fiducial))
+        # plt.ylabel('f')
+        # plt.legend(loc='best')
+        # plt.subplot(212)
+        # plt.plot(z, np.array(f)/np.array(f_ref)-1.)
+        # plt.ylabel('rel_diff')
+        # plt.subplots_adjust(hspace=.0)
+        # plt.show()
+
         # fsigma = [c.effective_f_sigma8(zi) for zi in z]
         # HI_CLASS_NEW: providing R in units of Mpc/h for backward
         # compatibility
@@ -294,7 +327,7 @@ def get_class_outputs(block, c, config):
         if config['lensing']:
             for s in ['pp']:
                 block[cmb_cl, s] = c_ell_data[s][2:] / 2 / np.pi *  ell * (ell + 1.0)
-       
+
         for s in ['tt', 'ee', 'te', 'bb']:
                 block[cmb_cl, s] = c_ell_data[s][2:] * f
 
