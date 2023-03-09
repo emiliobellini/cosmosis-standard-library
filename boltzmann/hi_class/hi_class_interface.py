@@ -157,19 +157,23 @@ def get_class_inputs(block, config):
         try_to_get_arrays_class(params, block, 'mgclass_spline_dsigma_smg')
         try_to_get_arrays_class(params, block, 'parameters_smg')
         try_to_get_arrays_class(params, block, 'expansion_smg')
+        try_to_get_arrays_class(params, block, 'back_spline_z_smg')
+        try_to_get_arrays_class(params, block, 'back_spline_domega_smg')
 
         # HI_CLASS_NEW: all the configuration parameters that start with
         # class_ or hi_class_ are now written in the param dictionary without
         # the prefix, to be used during the (hi_)class run.
         for key, val in config.items():
-            if key.startswith('class_'):
-                params[key[6:]] = val
             if key.startswith('hi_class_'):
                 params[key[9:]] = val
 
         # HI_CLASS_NEW: Adjust here config keys
         # (e.g. the parser is case insensitive).
         try_to_change_name(params, 'use_sigma', 'use_Sigma')
+
+    for key, val in config.items():
+        if key.startswith('class_'):
+            params[key[6:]] = val
 
     return params
 
