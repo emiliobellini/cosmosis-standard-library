@@ -38,7 +38,8 @@ def setup(options):
     config = {
         'lmax': options.get_int(option_section, 'lmax', default=2500),
         'zmax': options.get_double(option_section, 'zmax', default=4.0),
-        'kmax': options.get_double(option_section, 'kmax', default=50.0),
+        'kmax': options.get_double(option_section, 'kmax', default=50.),
+        'nk': options.get_int(option_section, 'nk', default=100),
         'debug': options.get_bool(option_section, 'debug', default=False),
         'lensing': options.get_bool(option_section, 'lensing', default=True),
         'cmb': options.get_bool(option_section, 'cmb', default=True),
@@ -193,7 +194,8 @@ def get_class_outputs(block, c, config):
     dz = 0.01
     kmin = 1e-4
     kmax = config['kmax'] * h0
-    nk = 100
+    #nk = 100
+    nk = config['nk']
 
     # Define k,z we want to sample
     z = np.arange(0.0, config["zmax"] + dz, dz)
@@ -311,6 +313,7 @@ def get_class_outputs(block, c, config):
     # Save some auxiliary related parameters
     block[distances, 'age'] = c.age()
     block[distances, 'rs_zdrag'] = c.rs_drag()
+    block[distances, 'zdrag'] = c.z_drag()
 
     ##
     # Now the CMB C_ell

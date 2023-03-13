@@ -139,6 +139,10 @@ outputs:
         rs_zdrag:
             meaning: Sound horizon size at zdrag. Only if mode!=background
             type: real
+        zdrag:
+            meaning: Redshift where baryons no longer dragged by photons. Only if
+                mode!=background
+            type: real
     growth_parameters:
         z:
             meaning: Redshift samples of other values in this section, (all if mode=power
