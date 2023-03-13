@@ -46,7 +46,7 @@ def setup(options):
         'save_matter_power_lin': options.get_bool(
             option_section, 'save_matter_power_lin', default=True),
         'save_cdm_baryon_power_lin': options.get_bool(
-            option_section, 'save_cdm_baryon_power_lin', default=False),
+            option_section, 'save_cdm_baryon_power_lin', default=False), 
     }
 
     # HI_CLASS_NEW: all the configuration parameters typical of (hi_)class
@@ -59,16 +59,15 @@ def setup(options):
     # All these parameters should be written in the [hi_class] section of
     # the ini file.
     for _, key in options.keys(option_section):
-        if key.startswith('class_') or key.startswith('hi_class_'):
+        if key.startswith('class_'):
             config[key] = options[option_section, key]
-            # HI_CLASS_NEW: classy does not like True/False as inputs, we
-            # need to reconvert them back to yes/no
-            if type(config[key]) == bool:
-                config[key] = 'yes' if config[key] else 'no'
+    for _, key in options.keys(option_section):
+        if key.startswith('hi_class_'):
+            config[key] = options[option_section, key]
 
     # Create the object that connects to Class
     config['cosmo'] = classy.Class()
-
+    print(config)
     # Return all this config information
     return config
 
@@ -146,35 +145,31 @@ def get_class_inputs(block, config):
     # parameter is typical of hi_class put it inside the if statement, if it
     # is a standard Class parameter write it outside.
     if block.has_value(cosmo, 'omega_smg') and block[cosmo, 'omega_smg'] < 0.:
-        # These are mandatory
         params['Omega_Lambda'] = block[cosmo, 'omega_lambda']
         params['Omega_smg'] = block[cosmo, 'omega_smg']
         params['Omega_fld'] = block[cosmo, 'omega_fld']
-        # These are optional
-        try_to_get_arrays_class(params, block, 'mgclass_spline_z_smg')
-        try_to_get_arrays_class(params, block, 'mgclass_spline_dmu_smg')
-        try_to_get_arrays_class(params, block, 'mgclass_spline_dgamma_smg')
-        try_to_get_arrays_class(params, block, 'mgclass_spline_dsigma_smg')
-        try_to_get_arrays_class(params, block, 'parameters_smg')
-        try_to_get_arrays_class(params, block, 'expansion_smg')
-        try_to_get_arrays_class(params, block, 'back_spline_z_smg')
-        try_to_get_arrays_class(params, block, 'back_spline_domega_smg')
+        params['mgclass_spline_z_anchor_smg'] = block[cosmo, 'mgclass_spline_z_anchor_smg']
+        params['parameters_smg'] = get_arrays_class(block, 'parameters_smg')
+        params['expansion_smg'] = get_arrays_class(block, 'expansion_smg')
+  #      params['mgclass_spline_size_smg'] = get_arrays_class(block, 'mgclass_spline_size_smg')
+        params['mgclass_spline_z_smg'] = get_arrays_class(block,'mgclass_spline_z_smg')
+        params['mgclass_spline_dmu_smg'] = get_arrays_class(block, 'mgclass_spline_dmu_smg')
+        params['mgclass_spline_dsigma_smg'] = get_arrays_class(block, 'mgclass_spline_dsigma_smg')
 
-        # HI_CLASS_NEW: all the configuration parameters that start with
-        # class_ or hi_class_ are now written in the param dictionary without
-        # the prefix, to be used during the (hi_)class run.
-        for key, val in config.items():
-            if key.startswith('hi_class_'):
-                params[key[9:]] = val
-
-        # HI_CLASS_NEW: Adjust here config keys
-        # (e.g. the parser is case insensitive).
-        try_to_change_name(params, 'use_sigma', 'use_Sigma')
-
+    # HI_CLASS_NEW: all the configuration parameters that start with class_ or
+    # hi_class_ are now written in the param dictionary without the prefix, to
+    # be used during the (hi_)class run.
     for key, val in config.items():
         if key.startswith('class_'):
             params[key[6:]] = val
-
+    for key, val in config.items():
+        if key.startswith('hi_class_'):
+            params[key[9:]] = val
+    try: 
+        params['use_Sigma'] = params['use_sigma']
+    except:
+        pass
+    print(params)
     return params
 
 
@@ -199,8 +194,6 @@ def get_class_outputs(block, c, config):
     z = np.arange(0.0, config["zmax"] + dz, dz)
     k = np.logspace(np.log10(kmin), np.log10(kmax), nk)
     nz = len(z)
-    # HI_CLASS_NEW: k_fiducial for scale dependent growth factor
-    k_fiducial = 1.e-2
 
     # Extract (interpolate) P(k,z) at the requested
     # sample points.
@@ -228,47 +221,13 @@ def get_class_outputs(block, c, config):
                            'p_k', P.T*h0**3)
 
         # Get growth rates and sigma_8
-        # D_ref = [c.scale_independent_growth_factor(zi) for zi in z]
-        # f_ref = [c.scale_independent_growth_factor_f(zi) for zi in z]
-        # HI_CLASS_NEW: scale dependent growth factor
-        D = [c.scale_dependent_growth_factor_at_k_and_z(
-            k_fiducial, zi) for zi in z]
-        f = [c.scale_dependent_growth_factor_f_at_k_and_z(
-            k_fiducial, zi, z_step=0.1) for zi in z]
-        # HI_CLASS_NEW: uncomment to see plots of
-        # relative diff between old an new growth rates
-        # import matplotlib.pyplot as plt
-        # plt.figure(1, figsize=(10, 8))
-        # plt.subplot(211)
-        # plt.plot(z, D_ref, label='back')
-        # plt.plot(z, D, '--', label='pert(k={:.2e})'.format(k_fiducial))
-        # plt.ylabel('D')
-        # plt.legend(loc='best')
-        # plt.subplot(212)
-        # plt.plot(z, np.array(D)/np.array(D_ref)-1.)
-        # plt.ylabel('rel_diff')
-        # plt.subplots_adjust(hspace=.0)
-        # plt.show()
-        # plt.figure(1, figsize=(10, 8))
-        # plt.subplot(211)
-        # plt.plot(z, f_ref, label='back')
-        # plt.plot(z, f, '--', label='pert(k={:.2e})'.format(k_fiducial))
-        # plt.ylabel('f')
-        # plt.legend(loc='best')
-        # plt.subplot(212)
-        # plt.plot(z, np.array(f)/np.array(f_ref)-1.)
-        # plt.ylabel('rel_diff')
-        # plt.subplots_adjust(hspace=.0)
-        # plt.show()
-
+        D = [c.scale_independent_growth_factor(zi) for zi in z]
+        f = [c.scale_independent_growth_factor_f(zi) for zi in z]
         # fsigma = [c.effective_f_sigma8(zi) for zi in z]
-        # HI_CLASS_NEW: providing R in units of Mpc/h for backward
-        # compatibility
-        # sigma_8_z = [c.sigma(8.0, zi, h_units=True) for zi in z]
-        sigma_8_z = [c.sigma(8.0/h0, zi) for zi in z]
+        sigma_8_z = [c.sigma(8.0, zi, h_units=True) for zi in z]
         block[names.growth_parameters, "z"] = z
         block[names.growth_parameters, "sigma_8"] = np.array(sigma_8_z)
-        block[names.growth_parameters, "fsigma_8"] = np.array(sigma_8_z) * np.array(f)
+        block[names.growth_parameters, "fsigma_8"] = np.array(sigma_8_z)
         block[names.growth_parameters, "d_z"] = np.array(D)
         block[names.growth_parameters, "f_z"] = np.array(f)
         block[names.growth_parameters, "a"] = 1/(1+z)
@@ -328,12 +287,8 @@ def get_class_outputs(block, c, config):
         f = ell * (ell + 1.0) / 2 / np.pi * tcmb_muk**2
 
         # Save each of the four spectra
-        if config['lensing']:
-            for s in ['pp']:
-                block[cmb_cl, s] = c_ell_data[s][2:] / 2 / np.pi *  ell * (ell + 1.0)
-
         for s in ['tt', 'ee', 'te', 'bb']:
-                block[cmb_cl, s] = c_ell_data[s][2:] * f
+            block[cmb_cl, s] = c_ell_data[s][2:] * f
 
 
 def execute(block, config):
@@ -377,21 +332,3 @@ def get_arrays_class(block, name):
         count += 1
     str_array = ", ".join(map(str, array))
     return str_array
-
-
-def try_to_get_arrays_class(params, block, name, name_save=None):
-    if not name_save:
-        name_save = name
-    value = get_arrays_class(block, name)
-    if value:
-        params[name_save] = value
-    return
-
-
-def try_to_change_name(params, name_old, name_new):
-    try:
-        params[name_new] = params[name_old]
-        params.pop(name_old)
-    except KeyError:
-        pass
-    return

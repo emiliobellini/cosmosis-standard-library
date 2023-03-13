@@ -139,6 +139,26 @@ outputs:
         rs_zdrag:
             meaning: Sound horizon size at zdrag. Only if mode!=background
             type: real
+    growth_parameters:
+        z:
+            meaning: Redshift samples of other values in this section, (all if mode=power
+                or all)
+            type: real 1d
+        a:
+            meaning: Scale factor samples of other values in this section
+            type: real 1d
+        sigma_8:
+            meaning: Amplitude of linear matter power as function of z sigma_8(z)
+            type: real 1d
+        fsigma_8:
+            meaning: Growth rate (f*sigma_8)(z)
+            type: real 1d
+        f_z:
+            meaning: Growth rate f(z)=dlog(D)/dlog(a)
+            type: real 1d
+        d_z:
+            meaning: Growth factor D(z)
+            type: real 1d
     matter_power_lin:
         z:
             meaning: Redshifts of samples. Only if mode=all
