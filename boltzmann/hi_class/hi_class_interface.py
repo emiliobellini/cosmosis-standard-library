@@ -203,7 +203,7 @@ def get_class_outputs(block, c, config, params):
     dz = 0.01
     kmin = 1e-4
     kmax = config['kmax'] * h0
-    #nk = 100
+    # nk = 100
     nk = config['nk']
 
     # Define k,z we want to sample
@@ -279,7 +279,8 @@ def get_class_outputs(block, c, config, params):
         sigma_8_z = [c.sigma(8.0/h0, zi) for zi in z]
         block[names.growth_parameters, "z"] = z
         block[names.growth_parameters, "sigma_8"] = np.array(sigma_8_z)
-        block[names.growth_parameters, "fsigma_8"] = np.array(sigma_8_z) * np.array(f)
+        block[names.growth_parameters, "fsigma_8"] = \
+            np.array(sigma_8_z) * np.array(f)
         block[names.growth_parameters, "d_z"] = np.array(D)
         block[names.growth_parameters, "f_z"] = np.array(f)
         block[names.growth_parameters, "a"] = 1/(1+z)
@@ -342,10 +343,10 @@ def get_class_outputs(block, c, config, params):
         # Save each of the four spectra
         if config['lensing']:
             for s in ['pp']:
-                block[cmb_cl, s] = c_ell_data[s][2:] / 2 / np.pi *  ell * (ell + 1.0)
+                block[cmb_cl, s] = c_ell_data[s][2:]/2/np.pi*ell*(ell+1.0)
 
         for s in ['tt', 'ee', 'te', 'bb']:
-                block[cmb_cl, s] = c_ell_data[s][2:] * f
+            block[cmb_cl, s] = c_ell_data[s][2:] * f
 
 
 def execute(block, config):
