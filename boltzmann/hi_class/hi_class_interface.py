@@ -179,12 +179,21 @@ def get_class_inputs(block, config):
     return params
 
 
-def get_class_outputs(block, c, config):
+def get_class_outputs(block, c, config, params):
     ##
     # Derived cosmological parameters
     ##
 
     h0 = block[cosmo, 'h0']
+
+    # Omega_smg
+    try:
+        z_sample = [params['back_spline_z_anchor_smg']]
+        z_sample = z_sample + params['back_spline_z_smg'].split(',')
+        z_sample = [float(z) for z in z_sample]
+        block[cosmo, 'omega_de'] = [c.Omega_smg(z) for z in z_sample]
+    except KeyError:
+        pass
 
     ##
     # Matter power spectrum
@@ -352,7 +361,7 @@ def execute(block, config):
         c.compute()
 
         # Extract outputs
-        get_class_outputs(block, c, config)
+        get_class_outputs(block, c, config, params)
     except classy.CosmoError as error:
         if config['debug']:
             sys.stderr.write("Error in class. You set debug=T so here is "

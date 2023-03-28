@@ -108,6 +108,9 @@ outputs:
             meaning: Amplitude of linear matter power at 8/h Mpc at z=0.  Only calculated
                 if mode=all
             type: real
+        omega_de:
+            meaning: Omega dark energy at different redshifts
+            type: real 1d
     distances:
         nz:
             meaning: Number of z samples
