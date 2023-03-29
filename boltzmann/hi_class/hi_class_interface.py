@@ -188,8 +188,7 @@ def get_class_outputs(block, c, config, params):
 
     # Omega_smg
     try:
-        z_sample = [params['back_spline_z_anchor_smg']]
-        z_sample = z_sample + params['back_spline_z_smg'].split(',')
+        z_sample = params['back_spline_z_smg'].split(',')
         z_sample = [float(z) for z in z_sample]
         block[cosmo, 'omega_de'] = [c.Omega_smg(z) for z in z_sample]
     except KeyError:
