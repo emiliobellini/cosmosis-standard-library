@@ -5,6 +5,7 @@ import warnings
 import numpy as np
 from builtins import str
 from cosmosis.datablock import names, option_section
+from cosmosis.runtime.config import Inifile
 
 # add class directory to the path
 dirname = os.path.split(__file__)[0]
@@ -48,7 +49,21 @@ def setup(options):
             option_section, 'save_matter_power_lin', default=True),
         'save_cdm_baryon_power_lin': options.get_bool(
             option_section, 'save_cdm_baryon_power_lin', default=False),
+        'save_errors': options.get_bool(
+            option_section, 'save_errors', default=False),
     }
+    
+    # HI_CLASS_NEW: if save_errors create a file with the errors
+    if config['save_errors']:
+        ini_values = Inifile(options['pipeline', 'values'])
+        config['varying_params'] = get_varying_params(ini_values)
+        name, ext = os.path.splitext(options['output', 'filename'])
+        name += '_errors'
+        config['save_errors_file'] = name + ext
+        fe = open(config['save_errors_file'], 'w')
+        fe.write('#{}\n'.format(
+            '\t'.join(['--'.join(x) for x in config['varying_params']])))
+        fe.close()
 
     # HI_CLASS_NEW: all the configuration parameters typical of (hi_)class
     # can be specified prepending "class_" or "hi_class_" to their (hi_)class
@@ -370,6 +385,12 @@ def execute(block, config):
         else:
             sys.stderr.write("Error in class. Set debug=T for info: "
                              "{}\n".format(error))
+        # HI_CLASS_NEW: if save_errors add failures to save_errors
+        if config['save_errors']:
+            fe = open(config['save_errors_file'], 'a')
+            fe.write('{}\n'.format(
+                '\t'.join([str(block[x]) for x in config['varying_params']])))
+            fe.close()
         return 1
     finally:
         # Reset for re-use next time
@@ -407,3 +428,16 @@ def try_to_change_name(params, name_old, name_new):
     except KeyError:
         pass
     return
+
+
+def get_varying_params(ini_values):
+    """
+    Get varying parameters (all, not just cosmological).
+    Varying parameters are those which values are arrays of len 3.
+    """
+    list_params = []
+    for (sec, key), val in ini_values:
+        val = val.split()
+        if len(val) == 3:
+            list_params.append((sec, key))
+    return list_params
