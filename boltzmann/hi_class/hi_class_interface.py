@@ -52,7 +52,7 @@ def setup(options):
         'save_errors': options.get_bool(
             option_section, 'save_errors', default=False),
     }
-    
+
     # HI_CLASS_NEW: if save_errors create a file with the errors
     if config['save_errors']:
         ini_values = Inifile(options['pipeline', 'values'])
