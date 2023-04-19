@@ -28,6 +28,7 @@ likelihood/planck2018/baseline/
 likelihood/planck2018/COM_Likelihood_Data-baseline_R3.00.tar.gz
 logs/
 
+hi_class_ini/*.sh
 hi_class_ini/*.ini
 !hi_class_ini/planck_emcee.ini
 !hi_class_ini/planck_test.ini
