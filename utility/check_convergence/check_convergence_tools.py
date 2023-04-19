@@ -32,6 +32,8 @@ def argument_parser():
                         help='Save plots.')
     parser.add_argument('--num_auto_points', '-n', type=int, default=1,
                         help='Number of autocorrelation points to be computed')
+    parser.add_argument('--autocorrelation_factor', '-a', type=int,
+                        default=100, help='Autocorrelation factor')
 
     return parser.parse_args()
 
@@ -163,7 +165,7 @@ class ChainFile(object):
         window = self._auto_window(taus, c)
         return taus[window]
 
-    def estimate_autocorrelations(self, plots=False, num=1):
+    def estimate_autocorrelations(self, plots=False, num=1, factor=100):
         if plots:
             plots_path = os.path.splitext(self.path)[0] + '_plots'
             try:
@@ -178,15 +180,23 @@ class ChainFile(object):
                 np.log(100), np.log(self.shape[0]), num)).astype(int)
         for npar, par in enumerate(self.names):
             if len(par) == 2:
-                auto = [self.autocorr(self[:n, :, npar]) for n in len_chains]
-                print('----> Parameter: {}, {}. N_steps/100 = '
-                      '{:.2f} should be larger than tau = {:.2f}'
-                      ''.format(par[0], par[1], len_chains[-1]/100, auto[-1]))
+                if plots:
+                    auto = [self.autocorr(self[:n, :, npar].T)
+                            for n in len_chains]
+                else:
+                    auto = [self.autocorr(self[:, :, npar].T)]
+                if len_chains[-1] >= factor*auto[-1]:
+                    status = write_green('[OK]')
+                else:
+                    status = write_red('[KO]')
+                print('{} Parameter: {}, {}. tau = {:.2f} (N_steps/{} = '
+                      '{:.2f})'.format(status, par[0], par[1], auto[-1],
+                                       factor, len_chains[-1]/factor))
                 if plots:
                     plt.loglog(len_chains, auto,
                                'o-', label=r"$\tau_{\rm estimate}$")
-                    plt.plot(len_chains, len_chains/100.0,
-                             '--b', label=r"$\tau = N/100$")
+                    plt.plot(len_chains, len_chains/factor,
+                             '--b', label=r"$\tau = N/{}$".format(factor))
                     plt.plot(len_chains, len_chains/1000.0,
                              '--r', label=r"$\tau = N/1000$")
                     plt.xlabel("number of samples, $N$")
@@ -195,5 +205,14 @@ class ChainFile(object):
                     plt.title(r"{}, {}".format(par[0], par[1]))
                     fname = 'tau_{}_{}.pdf'.format(par[0], par[1])
                     plt.savefig(os.path.join(plots_path, fname))
-                    plt.close
+                    plt.close()
         return
+
+# ------------------- Scripts ------------------------------------------------#
+
+def write_red(msg):
+    return '\033[1;31m{}\033[00m'.format(msg)
+
+
+def write_green(msg):
+    return '\033[1;32m{}\033[00m'.format(msg)

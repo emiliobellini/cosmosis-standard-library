@@ -19,4 +19,7 @@ if __name__ == '__main__':
     chain = tools.ChainFile(args.chain_file).read().reshape(n_walkers)
 
     # Get autocorrelations
-    chain.estimate_autocorrelations(num=args.num_auto_points, plots=args.plots)
+    chain.estimate_autocorrelations(
+        num=args.num_auto_points,
+        plots=args.plots,
+        factor=args.autocorrelation_factor)
