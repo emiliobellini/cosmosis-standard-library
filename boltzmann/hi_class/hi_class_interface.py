@@ -60,10 +60,11 @@ def setup(options):
         name, ext = os.path.splitext(options['output', 'filename'])
         name += '_errors'
         config['save_errors_file'] = name + ext
-        fe = open(config['save_errors_file'], 'w')
-        fe.write('#{}\n'.format(
-            '\t'.join(['--'.join(x) for x in config['varying_params']])))
-        fe.close()
+        if not os.path.isfile(config['save_errors_file']):
+            fe = open(config['save_errors_file'], 'w')
+            fe.write('#{}\n'.format(
+                '\t'.join(['--'.join(x) for x in config['varying_params']])))
+            fe.close()
 
     # HI_CLASS_NEW: all the configuration parameters typical of (hi_)class
     # can be specified prepending "class_" or "hi_class_" to their (hi_)class
