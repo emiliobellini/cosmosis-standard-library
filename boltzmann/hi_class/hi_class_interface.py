@@ -60,6 +60,9 @@ def setup(options):
         name, ext = os.path.splitext(options['output', 'filename'])
         name += '_errors'
         config['save_errors_file'] = name + ext
+        parent_folder, _ = os.path.split(config['save_errors_file'])
+        if not os.path.isdir(parent_folder):
+            os.makedirs(parent_folder)
         if not os.path.isfile(config['save_errors_file']):
             fe = open(config['save_errors_file'], 'w')
             fe.write('#{}\n'.format(
