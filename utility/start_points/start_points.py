@@ -148,7 +148,7 @@ def get_start_points(params, mean, covmat, n_samples,
                      rescale=True, truncate=True):
     start_points = np.zeros((n_samples, len(mean)))
     if rescale:
-        factor = np.diag(np.sqrt(np.diag(1./covmat)))
+        factor = np.diag(1./np.sqrt(np.diag(covmat)))
         inv_factor = np.diag(np.sqrt(np.diag(covmat)))
         rescaled_mean = factor.dot(mean)
         rescaled_covmat = factor.T.dot(covmat).dot(factor)
