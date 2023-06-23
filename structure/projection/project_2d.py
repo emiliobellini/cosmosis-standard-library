@@ -1419,10 +1419,10 @@ class SpectrumCalculator(object):
                     if power_suffix.startswith("_{") and power_suffix.endswith("}"):
                         suffix_range = power_suffix[2:-1].split("-")
                         suffices = [f"_{x}" for x in range(int(suffix_range[0]), int(suffix_range[1])+1)]
-                        only_bins_list = [[i] for i in range(int(suffix_range[0]), int(suffix_range[1])+1)]
+                        self.only_bins_list = [[i] for i in range(int(suffix_range[0]), int(suffix_range[1])+1)]
                     else:
                         suffices = [power_suffix]
-                        only_bins_list = [None]
+                        self.only_bins_list = [None]
 
                     sample_name_a = sample_name_a.strip()
                     sample_name_b = sample_name_b.strip()
@@ -1431,7 +1431,7 @@ class SpectrumCalculator(object):
                     self.req_kernel_keys.add(kernel_key_a)
                     self.req_kernel_keys.add(kernel_key_b)
 
-                    for power_suffix, only_bins in zip(suffices, only_bins_list):
+                    for power_suffix, only_bins in zip(suffices, self.only_bins_list):
 
                         # power_key is the power_3d class and suffix
                         power_key = (spectrum.power_3d_type, power_suffix)
@@ -1637,7 +1637,7 @@ class SpectrumCalculator(object):
                   f" ({spectrum.sample_a}, {spectrum.sample_b}) from P(k) {spectrum.input_section_name}")
 
         for i in range(na):
-            if not spectrum.should_do_bin(i+1) and spectrum.len_only_bins == na:
+            if not spectrum.should_do_bin(i+1) and len(self.only_bins_list) == na:
                 continue
             # for auto-correlations C_ij = C_ji so we calculate only one of them,
             # but save both orderings to the block to account for different ordering
