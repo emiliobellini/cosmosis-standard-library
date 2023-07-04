@@ -171,14 +171,22 @@ def get_class_inputs(block, config):
         params['Omega_smg'] = block[cosmo, 'omega_smg']
         params['Omega_fld'] = block[cosmo, 'omega_fld']
         # These are optional
+        try_to_get_arrays_class(params, block, 'parameters_smg')
+        try_to_get_arrays_class(params, block, 'expansion_smg')
+
+        try_to_get_arrays_class(params, block, 'back_spline_z_smg')
+        try_to_get_arrays_class(params, block, 'back_spline_domega_smg')
         try_to_get_arrays_class(params, block, 'mgclass_spline_z_smg')
         try_to_get_arrays_class(params, block, 'mgclass_spline_dmu_smg')
         try_to_get_arrays_class(params, block, 'mgclass_spline_dgamma_smg')
         try_to_get_arrays_class(params, block, 'mgclass_spline_dsigma_smg')
-        try_to_get_arrays_class(params, block, 'parameters_smg')
-        try_to_get_arrays_class(params, block, 'expansion_smg')
-        try_to_get_arrays_class(params, block, 'back_spline_z_smg')
-        try_to_get_arrays_class(params, block, 'back_spline_domega_smg')
+
+        try_to_get_arrays_class(params, block, 'spline_z_smg')
+        try_to_get_arrays_class(params, block, 'spline_domega_smg')
+        try_to_get_arrays_class(params, block, 'spline_braiding_smg')
+        try_to_get_arrays_class(params, block, 'spline_running_smg')
+        try_to_get_arrays_class(params, block, 'spline_dM2_smg')
+        try_to_get_arrays_class(params, block, 'spline_dcs2_smg')
 
         # HI_CLASS_NEW: all the configuration parameters that start with
         # class_ or hi_class_ are now written in the param dictionary without
@@ -208,6 +216,13 @@ def get_class_outputs(block, c, config, params):
     # Omega_smg
     try:
         z_sample = params['back_spline_z_smg'].split(',')
+        z_sample = [float(z) for z in z_sample]
+        block[cosmo, 'omega_de'] = [c.Omega_smg(z) for z in z_sample]
+    except KeyError:
+        pass
+    # Omega_smg
+    try:
+        z_sample = params['spline_z_smg'].split(',')
         z_sample = [float(z) for z in z_sample]
         block[cosmo, 'omega_de'] = [c.Omega_smg(z) for z in z_sample]
     except KeyError:
