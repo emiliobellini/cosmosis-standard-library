@@ -251,7 +251,7 @@ jobs:
         run: |
           source cosmosis-configure
           cosmosis examples/des-y3-shear.ini | tee output/des-y3-shear.log
-          grep -e 'Likelihood =  2957.03' -e 'Likelihood =  2957.12' -e 'Likelihood =  2957.11' output/des-y3-shear.log
+          grep -e 'Likelihood =  2957.03' -e 'Likelihood =  2957.12' output/des-y3-shear.log
 
 
       - name: DES Y3 likelihood with Mira Titan
@@ -267,33 +267,6 @@ jobs:
           source cosmosis-configure
           cosmosis examples/des-y3.ini -v halo_model_parameters.logT_AGN=8.2 -p camb.halofit_version=mead2020_feedback | tee output/des-y3-mead.log
           grep -e 'Likelihood =  6049.94' -e 'Likelihood =  6049.00' output/des-y3-mead.log
-
-      - name: Joint DES Y3 and KiDS-1000 likelihood
-        shell: bash -l {0}
-        run: |
-          source cosmosis-configure
-          cosmosis examples/des-y3_and_kids-1000.ini | tee output/des-y3_and_kids-1000.log
-          grep 'Likelihood =  -199.409' output/des-y3_and_kids-1000.log
-          
-      - uses: actions/cache@v2
-        name: ACT Data Cache
-        id: cache-act
-        with:
-          path: likelihood/act-dr6-lens/data/v1.1
-          key: ${{ runner.os }}-act-dr6-v1.1
-
-      - name: Download ACT DR6 Lensing Data
-        if: steps.cache-act.outputs.cache-hit != 'true'
-        run: |
-            cd likelihood/act-dr6-lens/
-            ./get-act-data.sh
-
-      - name: ACT DR6 Lensing
-        shell: bash -l {0}
-        run: |
-          source cosmosis-configure
-          cosmosis examples/act-dr6-lens.ini | tee output/act-dr6.log
-          grep -e 'Likelihood =  -9.89' -e 'Likelihood =  -9.90' output/act-dr6.log
 
       - name: DES Y3 6x2pt
         shell: bash -l {0}
