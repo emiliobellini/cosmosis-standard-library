@@ -17,12 +17,14 @@ def setup(options):
 
     # Set up the path to let us import the emulator
     install_dir = f"{dirname}/ee_install/"
+    print(install_dir)
     sys.path.insert(0, install_dir)
 
     # check everything imports
     import euclidemu2
-    print("Loaded Euclid Emulator 2 installation at", euclidemu2.__file__)
-    emulator = euclidemu2.PyEuclidEmulator()
+
+    emulator = None
+
     return [input_section, output_section, emulator]
 
 
