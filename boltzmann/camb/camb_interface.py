@@ -668,17 +668,14 @@ def execute(block, config):
             more_config["n_printed_errors"] += 1
         return 1
 
-    with be_quiet_camb():
-        save_derived_parameters(r, block)
-        save_distances(r, block, more_config)
+    save_derived_parameters(r, block)
+    save_distances(r, block, more_config)
 
     if p.WantTransfer:
-        with be_quiet_camb():
-            save_matter_power(r, block, more_config)
+        save_matter_power(r, block, more_config)
 
     if p.WantCls:
-        with be_quiet_camb():
-            save_cls(r, block)
+        save_cls(r, block)
     
     return 0
 
