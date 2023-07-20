@@ -252,14 +252,14 @@ def get_class_outputs(block, c, config, params):
     # Extract (interpolate) P(k,z) at the requested
     # sample points.
     if 'mPk' in c.pars['output']:
-        block[cosmo, 'sigma_8'] = c.sigma8()
+        block[cosmo, 'sigma_8'] = np.nan_to_num(c.sigma8())
 
         # Total matter power spectrum (saved as grid)
         if config['save_matter_power_lin']:
             P = np.zeros((k.size, z.size))
             for i, ki in enumerate(k):
                 for j, zi in enumerate(z):
-                    P[i, j] = c.pk_lin(ki, zi)
+                    P[i, j] = np.nan_to_num(c.pk_lin(ki, zi))
             # HI_CLASS_NEW: inverted z and k for compatibility with camb output
             block.put_grid("matter_power_lin", "z", z, "k_h", k / h0,
                            "p_k", P.T * h0**3)
@@ -269,7 +269,7 @@ def get_class_outputs(block, c, config, params):
             P = np.zeros((k.size, z.size))
             for i, ki in enumerate(k):
                 for j, zi in enumerate(z):
-                    P[i, j] = c.pk_cb_lin(ki, zi)
+                    P[i, j] = np.nan_to_num(c.pk_cb_lin(ki, zi))
             # HI_CLASS_NEW: inverted z and k for compatibility with camb output
             block.put_grid('cdm_baryon_power_lin', 'z', z, 'k_h', k/h0,
                            'p_k', P.T*h0**3)
@@ -278,10 +278,10 @@ def get_class_outputs(block, c, config, params):
         # D_ref = [c.scale_independent_growth_factor(zi) for zi in z]
         # f_ref = [c.scale_independent_growth_factor_f(zi) for zi in z]
         # HI_CLASS_NEW: scale dependent growth factor
-        D = [c.scale_dependent_growth_factor_at_k_and_z(
-            k_fiducial, zi) for zi in z]
-        f = [c.scale_dependent_growth_factor_f_at_k_and_z(
-            k_fiducial, zi, z_step=0.1) for zi in z]
+        D = [np.nan_to_num(c.scale_dependent_growth_factor_at_k_and_z(
+            k_fiducial, zi)) for zi in z]
+        f = [np.nan_to_num(c.scale_dependent_growth_factor_f_at_k_and_z(
+            k_fiducial, zi, z_step=0.1)) for zi in z]
         # HI_CLASS_NEW: uncomment to see plots of
         # relative diff between old an new growth rates
         # import matplotlib.pyplot as plt
@@ -312,7 +312,7 @@ def get_class_outputs(block, c, config, params):
         # HI_CLASS_NEW: providing R in units of Mpc/h for backward
         # compatibility
         # sigma_8_z = [c.sigma(8.0, zi, h_units=True) for zi in z]
-        sigma_8_z = [c.sigma(8.0/h0, zi) for zi in z]
+        sigma_8_z = [np.nan_to_num(c.sigma(8.0/h0, zi)) for zi in z]
         block[names.growth_parameters, "z"] = z
         block[names.growth_parameters, "sigma_8"] = np.array(sigma_8_z)
         block[names.growth_parameters, "fsigma_8"] = \
@@ -324,7 +324,7 @@ def get_class_outputs(block, c, config, params):
         if c.nonlinear_method != 0:
             for i, ki in enumerate(k):
                 for j, zi in enumerate(z):
-                    P[i, j] = c.pk(ki, zi)
+                    P[i, j] = np.nan_to_num(c.pk(ki, zi))
 
             # HI_CLASS_NEW: inverted z and k for compatibility with camb output
             block.put_grid("matter_power_nl", "z", z, "k_h", k / h0,
@@ -379,10 +379,10 @@ def get_class_outputs(block, c, config, params):
         # Save each of the four spectra
         if config['lensing']:
             for s in ['pp']:
-                block[cmb_cl, s] = c_ell_data[s][2:]/2/np.pi*ell*(ell+1.0)
+                block[cmb_cl, s] = np.nan_to_num(c_ell_data[s][2:]/2/np.pi*ell*(ell+1.0))
 
         for s in ['tt', 'ee', 'te', 'bb']:
-            block[cmb_cl, s] = c_ell_data[s][2:] * f
+            block[cmb_cl, s] = np.nan_to_num(c_ell_data[s][2:] * f)
 
 
 def execute(block, config):
