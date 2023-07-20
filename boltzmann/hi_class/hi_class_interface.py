@@ -188,6 +188,13 @@ def get_class_inputs(block, config):
         try_to_get_arrays_class(params, block, 'spline_dM2_smg')
         try_to_get_arrays_class(params, block, 'spline_dcs2_smg')
 
+        try_to_get_arrays_class(params, block, 'binning_z_smg')
+        try_to_get_arrays_class(params, block, 'binning_domega_smg')
+        try_to_get_arrays_class(params, block, 'binning_braiding_smg')
+        try_to_get_arrays_class(params, block, 'binning_running_smg')
+        try_to_get_arrays_class(params, block, 'binning_dM2_smg')
+        try_to_get_arrays_class(params, block, 'binning_dcs2_smg')
+
         # HI_CLASS_NEW: all the configuration parameters that start with
         # class_ or hi_class_ are now written in the param dictionary without
         # the prefix, to be used during the (hi_)class run.
@@ -214,19 +221,15 @@ def get_class_outputs(block, c, config, params):
     h0 = block[cosmo, 'h0']
 
     # Omega_smg
-    try:
-        z_sample = params['back_spline_z_smg'].split(',')
-        z_sample = [float(z) for z in z_sample]
-        block[cosmo, 'omega_de'] = [c.Omega_smg(z) for z in z_sample]
-    except KeyError:
-        pass
-    # Omega_smg
-    try:
-        z_sample = params['spline_z_smg'].split(',')
-        z_sample = [float(z) for z in z_sample]
-        block[cosmo, 'omega_de'] = [c.Omega_smg(z) for z in z_sample]
-    except KeyError:
-        pass
+    if params['expansion_model'] == 'spline_domega':
+        z_sample = params['spline_z_smg']
+    elif params['expansion_model'] == 'binning_domega':
+        z_sample = params['binning_z_smg']
+    elif params['expansion_model'] == 'domega_spline':
+        z_sample = params['back_spline_z_smg']
+    z_sample = z_sample.split(',')
+    z_sample = [float(z) for z in z_sample]
+    block[cosmo, 'omega_de'] = [c.Omega_smg(z) for z in z_sample]
 
     ##
     # Matter power spectrum
