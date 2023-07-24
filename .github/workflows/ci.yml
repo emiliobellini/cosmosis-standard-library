@@ -87,46 +87,7 @@ jobs:
 
       - name: Install dependencies with conda
         shell: bash -l {0}
-        run: mamba install -c conda-forge "cosmosis>=3.2" cosmosis-build-standard-library pytest
-      
-      - name: Get Cached Planck
-        uses: actions/cache/restore@v3
-        with:
-          path: COM_Likelihood_Data-baseline_R3.00.tar.gz
-          key: planck-2018-data
-          fail-on-cache-miss: true
-
-      - name: Get Cached WMAP
-        uses: actions/cache/restore@v3
-        with:
-          path: wmap_likelihood_full_v5.tar.gz
-          key: wmap-9-data
-          fail-on-cache-miss: true
-
-      - name: Get Cached ACT
-        uses: actions/cache/restore@v3
-        with:
-          path: ACT_dr6_likelihood_v1.1.tgz
-          key: act-dr6-data
-          fail-on-cache-miss: true
-          
-      - name: Extract data
-        shell: bash -l {0}
-        run: |
-          # WMAP
-          pushd likelihood/wmap9/data
-          tar -zxvf ../../../wmap_likelihood_full_v5.tar.gz
-          mv wmap_likelihood_v5/data/* .
-          popd
-          #Planck
-          pushd likelihood/planck2018
-          tar -zxvf ../../COM_Likelihood_Data-baseline_R3.00.tar.gz
-          popd
-          # ACT
-          mkdir likelihood/act-dr6-lens/data
-          pushd likelihood/act-dr6-lens/data
-          tar -zxvf ../../../ACT_dr6_likelihood_v1.1.tgz
-          popd
+        run: mamba install -c conda-forge cosmosis cosmosis-build-standard-library jupyter
 
       - name: Build standard library
         shell: bash -l {0}
