@@ -95,12 +95,19 @@ jobs:
           source cosmosis-configure
           make
 
-      - name: Install likelihood python dependencies from pip
-        shell: bash -l {0}
+      - name: Test campaign commands
+        shell: bask -l {0}
         run: |
-          pip install "act_dr6_lenslike>=1.0.2"
+          source cosmosis-configure
+          cosmosis-campaign -l examples/des-campaign.yml | tee output/campaign.log
+          grep -e "mira-titan" campaign.log
+          grep -e "fiducial" campaign.log
+          cosmosis-campaign --run fiducial-test-only examples/des-campaign.yml
+          cosmosis-campaign  examples/des-campaign.yml --status fiducial-test-only > output/campaign.log
+          grep -e "🟢 fiducial-test-only" output/campaign.log
+          
 
-      - name: Run Tests
+      - name: Smail example
         shell: bash -l {0}
         run: |
           source cosmosis-configure
