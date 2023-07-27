@@ -385,8 +385,7 @@ jobs:
         grep -e "🟢 fiducial-test-only" output/campaign.log
         cosmosis-campaign  examples/des-campaign.yml --status
 
-    - name: ExampleNotebook
-      shell: bash -l {0}
+    - name: Demo 9 Low-Resolution Multinest
       run: |
         source .github/ci-setup.sh
         cosmosis demos/demo9.ini -p multinest.live_points=100
