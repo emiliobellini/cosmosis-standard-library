@@ -270,7 +270,6 @@ jobs:
           pytest -vv --durations=0 tests/test_demos.py
 
 
-
   apt-get-test:
     runs-on: ubuntu-20.04
     needs: Download_Data
