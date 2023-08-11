@@ -95,7 +95,4 @@ def execute(block, config):
 
         block[cosmo, "sigma_8"] = sigma_8
 
-    # Add a marker to the consistency 
-    block[cosmo, "consistency_module_was_used"] = True
-
     return 0
