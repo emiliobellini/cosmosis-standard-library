@@ -11,7 +11,7 @@ def setup(options):
         option_section, "relations_file", default="")
     extra_relations = options.get_string(option_section, "extra_relations", default="")
     cons = consistency.cosmology_consistency(verbose, relations_file, cosmomc_theta, extra_relations)
-    return cons, cosmomc_theta
+    return cons
 
 
 def execute(block, config):

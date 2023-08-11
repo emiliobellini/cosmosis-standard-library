@@ -55,16 +55,10 @@ def cosmology_consistency(verbose=False, relations_file="", theta=False, extra_r
         if theta:
             relations = relations + THETA_RELATIONS
         if extra_relations:
-            extra_relations = [rel.split('=', 1)
-                               for rel in  extra_relations.replace(' ', '').split(',')]
+            extra_relations = [(rel.split('=')[0], rel.split('=')[1]) \
+                                    for rel in  extra_relations.split(',')]
             relations = relations + extra_relations
-
-    # To relate mnu and omnuh2 we need these parameters.
-    extra_fixed_params = ["YHe", "nnu", "num_massive_neutrinos", "TCMB"]
-    # If we are relating H0 and the CosmoMC theta parameter then we need these too.
-    if theta:
-        extra_fixed_params += ["w", "wa"]
-    return Consistency(relations, COSMOLOGY_POSSIBLE_DEFAULTS, verbose, extra_fixed_params)
+    return Consistency(relations, COSMOLOGY_POSSIBLE_DEFAULTS, verbose)
 
 
 COSMOLOGY_CONSISTENCY_RELATIONS = [
