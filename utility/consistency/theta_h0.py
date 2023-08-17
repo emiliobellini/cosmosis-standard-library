@@ -4,9 +4,7 @@ import scipy.integrate
 import scipy.optimize
 
 
-
-
-def H0_to_theta(hubble, omega_nu, omnuh2, mnu, TCMB, omega_m, ommh2, omega_c, omch2, omega_b, ombh2, omega_lambda, omlamh2, omega_k, num_massive_neutrinos, nnu, w, wa):
+def H0_to_theta(hubble, omega_nu, omnuh2, omega_m, ommh2, omega_c, omch2, omega_b, ombh2, omega_lambda, omlamh2, omega_k, final=False):
     h = hubble / 100.
     if np.isnan(omnuh2):
         omnuh2 = omega_nu * h**2
@@ -25,14 +23,12 @@ def H0_to_theta(hubble, omega_nu, omnuh2, mnu, TCMB, omega_m, ommh2, omega_c, om
     if np.isnan(omega_lambda):
         omega_lambda = 1 - omega_k - omega_m
 
-    if np.isnan(mnu):
-        mnu = omnuh2 / ((nnu / 3.0) ** 0.75 / 94.06410581217612 * (TCMB/2.7255)**3)
-
-    if np.isnan([hubble, omega_m, omega_lambda, ombh2, mnu]).any():
+    if np.isnan([omnuh2, hubble, omega_m, omega_lambda, ombh2]).any():
         return np.nan
+    
+    mnu = 93.14 * omnuh2
 
     original_feedback_level = camb.config.FeedbackLevel
-
 
     try:
         camb.set_feedback_level(0)
@@ -41,16 +37,14 @@ def H0_to_theta(hubble, omega_nu, omnuh2, mnu, TCMB, omega_m, ommh2, omega_c, om
                         omch2 = omch2,
                         omk = omega_k,
                         mnu = mnu,
-                        num_massive_neutrinos=num_massive_neutrinos,
-                        nnu=nnu,
                         H0=hubble)
-        p.set_dark_energy(w=w, wa=wa, dark_energy_model='ppf')
         r = camb.get_background(p)
         theta = r.cosmomc_theta()
     except:
         theta = np.nan
     finally:
         camb.config.FeedbackLevel = original_feedback_level
+    
     return theta
 
 
@@ -74,39 +68,36 @@ def H0_to_theta_interface(params):
     num_massive_neutrinos = params.get('num_massive_neutrinos', 1)
     nnu = params.get('nnu', 3.044)
 
-    return 100 * H0_to_theta(hubble, omega_nu, omnuh2, mnu, TCMB, omega_m, ommh2, omega_c, omch2, omega_b, ombh2, omega_lambda, omlamh2, omega_k, num_massive_neutrinos, nnu, w, wa)
+    return 100 * H0_to_theta(hubble, omega_nu, omnuh2, omega_m, ommh2, omega_c, omch2, omega_b, ombh2, omega_lambda, omlamh2, omega_k)
 
 
-def theta_to_H0(theta, omnuh2, mnu, TCMB, omch2, ombh2, omega_k, num_massive_neutrinos, nnu, w, wa):
-    if np.isnan(mnu):
-            mnu = omnuh2 / ((nnu / 3.0) ** 0.75 / 94.06410581217612 * (TCMB/2.7255)**3)
+def theta_to_H0(theta, omega_nu, omnuh2, omega_m, ommh2, omega_c, omch2, omega_b, ombh2, omega_lambda, omlamh2, omega_k):
+    get_theta = lambda H0: H0_to_theta(H0, omega_nu, omnuh2, omega_m, ommh2, omega_c, omch2, omega_b, ombh2, omega_lambda, omlamh2, omega_k)
+    t = get_theta(70.0)
 
-    if np.isnan([ombh2, omch2, theta, omega_k, mnu]).any():
+    if np.isnan(t):
         return np.nan
 
     original_feedback_level = camb.config.FeedbackLevel
     try:
-        camb.set_feedback_level(0)
-        p = camb.CAMBparams()
-        p.set_cosmology(ombh2 = ombh2,
-                        omch2 = omch2,
-                        omk = omega_k,
-                        mnu = mnu,
-                        num_massive_neutrinos=num_massive_neutrinos,
-                        nnu=nnu,
-                        cosmomc_theta = theta)
-        p.set_dark_energy(w=w, wa=wa, dark_energy_model='ppf')
-        H0 = p.h * 100
-    except:
-        H0 = np.nan
-    finally:
-        camb.config.FeedbackLevel = original_feedback_level
+        get_theta(H0_min)
+    except ValueError:
+        H0_min = 40.0
+
+    try:
+        get_theta(H0_max)
+    except ValueError:
+        H0_max = 100.0
+
+    f = lambda H0: get_theta(H0) - theta
+    H0 = scipy.optimize.brentq(f, H0_min, H0_max, rtol=5e-5)
 
     return H0
 
 
 def theta_to_H0_interface(params):  
     theta = params['cosmomc_theta'] / 100
+    omega_nu = params.get('omega_nu', np.nan)
     omnuh2 = params.get('omnuh2', np.nan)
     mnu = params.get('mnu', np.nan)
     TCMB = params.get('TCMB', np.nan)
