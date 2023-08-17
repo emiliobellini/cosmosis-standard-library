@@ -21,16 +21,6 @@ def execute(block, config):
     # Create dict of all parameters that we have already
     known_parameters = {}
 
-    # We need TCMB and nnu to get omnuh2 from mnu. If it's not specified use the default
-    block.get_double("cosmological_parameters", "TCMB", 2.7255)
-    block.get_double("cosmological_parameters", "nnu", 3.044)
-
-    # We need these to get cosmomc_theta from H0 or vice versa, so only get them
-    # if cosmomc_theta mode is active
-    if cosmomc_theta:
-        block.get_double("cosmological_parameters", "w", -1.0)
-        block.get_double("cosmological_parameters", "wa", 0.0)
-
     for param in list(cons.parameters.keys()) + cons.extra_fixed:
         if '___' in param:
             section, lookup_param = param.split('___')

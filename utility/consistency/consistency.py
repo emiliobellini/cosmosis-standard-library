@@ -58,7 +58,11 @@ def cosmology_consistency(verbose=False, relations_file="", theta=False, extra_r
             extra_relations = [rel.split('=', 1)
                                for rel in  extra_relations.replace(' ', '').split(',')]
             relations = relations + extra_relations
-    return Consistency(relations, COSMOLOGY_POSSIBLE_DEFAULTS, verbose)
+
+    # These params are needed for the stupid CMB theta parameter.
+    # This was a lovely elegant design before we had to support that.
+    extra_fixed_params = ["YHe", "nnu", "num_massive_neutrinos", "mnu"]
+    return Consistency(relations, COSMOLOGY_POSSIBLE_DEFAULTS, verbose, extra_fixed_params)
 
 
 COSMOLOGY_CONSISTENCY_RELATIONS = [
