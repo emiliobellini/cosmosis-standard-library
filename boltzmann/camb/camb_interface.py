@@ -41,6 +41,7 @@ matter_power_section_names = {
 @contextlib.contextmanager
 def be_quiet_camb():
     original_feedback_level = camb.config.FeedbackLevel
+    print("original", original_feedback_level)
     try:
         camb.set_feedback_level(0)
         yield
