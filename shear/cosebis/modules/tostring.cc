@@ -1,6 +1,4 @@
 #include "tostring.h"
-#include <string>
-#include <sstream>
 
 void noBlanks(string& str)
 {
@@ -10,24 +8,32 @@ void noBlanks(string& str)
 }
 
 string toString(const int i){
-  return to_string(i);
+  ostrstream ost;
+  ost << i << '\0';
+  return ost.str();
 }
 
 string toString(const long l){
-  return to_string(l);
+  ostrstream ost;
+  ost << l << '\0';
+  return ost.str();
 }
 
 string toString(const int short us){
-  return to_string(us);
+  ostrstream ost;
+  ost << us << '\0';
+  return ost.str();
 }
 
 
 string toString(const int unsigned ui){
-  return to_string(ui);
+  ostrstream ost;
+  ost << ui << '\0';
+  return ost.str();
 }
 
 string toString(const float f,int precision){
-  ostringstream ost;
+  ostrstream ost;
  
   if (precision)
     ost.precision(precision);
@@ -35,12 +41,12 @@ string toString(const float f,int precision){
     ost.precision(0);
 
   ost.setf(ios::fixed,ios::floatfield);
-  ost << f;
+  ost << f << '\0';
   return ost.str();
 }
 
 string toString(const double d,int precision){
-  ostringstream ost;
+  ostrstream ost;
 
   if (precision)
     ost.precision(precision);
@@ -48,7 +54,7 @@ string toString(const double d,int precision){
     ost.precision(0);
 
   ost.setf(ios::fixed,ios::floatfield);
-  ost << d;
+  ost << d << '\0';
   return ost.str();
 }
 
