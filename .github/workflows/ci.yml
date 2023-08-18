@@ -19,50 +19,34 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v2
         name: Planck Data Cache
         id: cache-planck
         with:
-          path: COM_Likelihood_Data-baseline_R3.00.tar.gz
+          path: likelihood/planck2018/baseline
           key: planck-2018-data
-          enableCrossOsArchive: true
   
+
       - if: ${{ steps.cache-planck.outputs.cache-hit != 'true' }}
         name: Download Planck
         shell: bash -l {0}
         run: |
-          URL="https://portal.nersc.gov/cfs/lsst/zuntz/planck/COM_Likelihood_Data-baseline_R3.00.tar.gz"
-          FILENAME="COM_Likelihood_Data-baseline_R3.00.tar.gz"
-          wget -O ${FILENAME} ${URL}
-        
+          ./examples/get-planck-data.sh
+
       - name: Cache WMAP data
         id: cache-wmap
         uses: actions/cache@v3
+        env:
+          cache-name: cache-wmap-data
         with:
-          path: wmap_likelihood_full_v5.tar.gz
+          path: likelihood/wmap9/data/
           key: wmap-9-data
-          enableCrossOsArchive: true
-          
+  
       - if: ${{ steps.cache-wmap.outputs.cache-hit != 'true' }}
         name: Download WMAP data
         run:  |
-          wget https://lambda.gsfc.nasa.gov/data/map/dr5/dcp/likelihood/wmap_likelihood_full_v5.tar.gz
-
-      - name: Cache ACT data
-        id: cache-act
-        uses: actions/cache@v3
-        with:
-          path: ACT_dr6_likelihood_v1.1.tgz
-          key: act-dr6-data
-          enableCrossOsArchive: true
-          
-      - if: ${{ steps.cache-act.outputs.cache-hit != 'true' }}
-        name: Download ACT data
-        run:  |
-          wget https://lambda.gsfc.nasa.gov/data/suborbital/ACT/ACT_dr6/likelihood/data/ACT_dr6_likelihood_v1.1.tgz
-
-
-
+          ./examples/get-wmap-data.sh
+  
 
   conda_test:
     name: Conda Test
@@ -116,8 +100,6 @@ jobs:
           source cosmosis-configure
           export
           mkdir -p output
-          # Check the downloader works
-          ./examples/get-planck-data.sh
           # And that the pipeline runs afterwards
           cosmosis examples/planck.ini | tee output/planck.log
           grep -e 'Likelihood =  -1441.14' -e 'Likelihood =  -1441.30' -e 'Likelihood =  -1441.46' output/planck.log
@@ -133,16 +115,6 @@ jobs:
           # grep 'Likelihood =  -5968.93' output/class.log
           # This seems to give different results on different systems
 
-      - name: Cache WMAP data
-        id: cache-wmap
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-wmap-data
-        with:
-          path: likelihood/wmap9/data/
-          key: wmap-9-data
-
-      - if: ${{ steps.cache-wmap.outputs.cache-hit != 'true' }}
         name: Download WMAP data
         run:  |
           ./examples/get-wmap-data.sh
