@@ -61,7 +61,7 @@ def cosmology_consistency(verbose=False, relations_file="", theta=False, extra_r
 
     # These params are needed for the stupid CMB theta parameter.
     # This was a lovely elegant design before we had to support that.
-    extra_fixed_params = ["YHe", "nnu", "num_massive_neutrinos", "mnu"]
+    extra_fixed_params = ["YHe", "nnu", "num_massive_neutrinos", "TCMB"]
     return Consistency(relations, COSMOLOGY_POSSIBLE_DEFAULTS, verbose, extra_fixed_params)
 
 
