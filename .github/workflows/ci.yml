@@ -138,7 +138,176 @@ jobs:
         shell: bash -l {0}
         run: |
           source cosmosis-configure
-          pytest -vv --durations=0 tests/test_cosmosis_standard_library.py
+          cosmosis examples/various-spectra.ini -p consistency.extra_relations='omega_x=omega_c+100'
+          grep -e 'omega_x = 100.261' output/various-spectra/cosmological_parameters/values.txt
+
+      - name: BAO
+        shell: bash -l {0}
+        run: |
+          source cosmosis-configure
+          cosmosis examples/bao.ini
+
+      - name: CAMB Planck
+        shell: bash -l {0}
+        run: |
+          # print out the configuration
+          python -m cosmosis.configure
+          source cosmosis-configure
+          export
+          mkdir -p output
+          # Check the downloader works
+          ./examples/get-planck-data.sh
+          # And that the pipeline runs afterwards
+          cosmosis examples/planck.ini | tee output/planck.log
+          grep -e 'Likelihood =  -1441.30' -e 'Likelihood =  -1441.46' output/planck.log
+          
+
+      - name: Class Planck
+        shell: bash -l {0}
+        run: |
+          source cosmosis-configure
+          cosmosis examples/planck_class.ini -p class.mpk=T | tee output/class.log
+          # This may need updating as we modify the class interface
+          # The settings are not optimized
+          # grep 'Likelihood =  -5968.93' output/class.log
+          # This seems to give different results on different systems
+
+      - name: Cache WMAP data
+        id: cache-wmap
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-wmap-data
+        with:
+          path: likelihood/wmap9/data/
+          key: wmap-9-data
+
+      - if: ${{ steps.cache-wmap.outputs.cache-hit != 'true' }}
+        name: Download WMAP data
+        run:  |
+          ./examples/get-wmap-data.sh
+
+      - name: WMAP likelihood
+        shell: bash -l {0}
+        run: |
+          source cosmosis-configure
+          cosmosis examples/wmap.ini | tee output/wmap.log
+
+
+      - name: Pantheon emcee
+        shell: bash -l {0}
+        run: |
+          source cosmosis-configure
+          cosmosis examples/pantheon.ini -p emcee.samples=20
+          cosmosis-postprocess examples/pantheon.ini -o output/pantheon
+          test -f output/pantheon/cosmological_parameters--omega_m.png
+
+      - name: PantheonPlusAndShoes
+        shell: bash -l {0}
+        run: |
+          source cosmosis-configure
+          cosmosis examples/pantheon_plus_shoes.ini -p runtime.sampler=test | tee output/pantheon_plus_shoes_log.txt
+          grep 'Likelihood =  -738.23' output/pantheon_plus_shoes_log.txt
+
+      - name: DES Y1 likelihood
+        shell: bash -l {0}
+        run: |
+          source cosmosis-configure
+          cosmosis examples/des-y1.ini | tee output/des-y1.log
+          # unchanged in camb 1.4
+          grep 'Likelihood =  5237.3' output/des-y1.log
+
+      - name: DES Y1 likelihood with cl_to_corr
+        shell: bash -l {0}
+        run: |
+          source cosmosis-configure
+          cosmosis examples/des-y1.ini -p 2pt_shear.file=./shear/cl_to_corr/cl_to_corr.py 2pt_shear.corr_type=xi | tee output/des-y1.log
+          # unchanged in camb 1.4
+          grep 'Likelihood =  5237.3' output/des-y1.log
+
+
+      - name: DES Y3 likelihood
+        shell: bash -l {0}
+        run: |
+          source cosmosis-configure
+          cosmosis examples/des-y3.ini -p pk_to_cl_gg.save_kernels=T pk_to_cl.save_kernels=T | tee output/des-y3.log
+          # Different versions - camb changes and scipy interpolation changes both alter these
+          grep -e 'Likelihood =  6043.23' -e 'Likelihood =  6043.34' -e 'Likelihood =  6043.33' output/des-y3.log
+
+
+      - name: DES Y3 Class likelihood
+        shell: bash -l {0}
+        run: |
+          source cosmosis-configure
+          cosmosis examples/des-y3-class.ini
+          # class is not consistent across systems to the level needed here
+
+      - name: DES Y3 cosmic shear likelihood
+        shell: bash -l {0}
+        run: |
+          source cosmosis-configure
+          cosmosis examples/des-y3-shear.ini | tee output/des-y3-shear.log
+          grep -e 'Likelihood =  2957.03' -e 'Likelihood =  2957.12' -e 'Likelihood =  2957.11' output/des-y3-shear.log
+
+
+      - name: DES Y3 likelihood with Mira Titan
+        shell: bash -l {0}
+        run: |
+          source cosmosis-configure
+          cosmosis examples/des-y3-mira-titan.ini | tee output/des-y3-mt.log
+          grep -e 'Likelihood =  6048.0' -e 'Likelihood =  6048.1' output/des-y3-mt.log
+
+      - name: DES Y3 likelihood with Mead nonlinear
+        shell: bash -l {0}
+        run: |
+          source cosmosis-configure
+          cosmosis examples/des-y3.ini -v halo_model_parameters.logT_AGN=8.2 -p camb.halofit_version=mead2020_feedback | tee output/des-y3-mead.log
+          grep -e 'Likelihood =  6049.94' -e 'Likelihood =  6049.00' output/des-y3-mead.log
+
+      - name: Joint DES Y3 and KiDS-1000 likelihood
+        shell: bash -l {0}
+        run: |
+          source cosmosis-configure
+          cosmosis examples/des-y3_and_kids-1000.ini | tee output/des-y3_and_kids-1000.log
+          grep 'Likelihood =  -199.409' output/des-y3_and_kids-1000.log
+          
+      - uses: actions/cache@v2
+        name: ACT Data Cache
+        id: cache-act
+        with:
+          path: likelihood/act-dr6-lens/data/v1.1
+          key: ${{ runner.os }}-act-dr6-v1.1
+
+      - name: Download ACT DR6 Lensing Data
+        if: steps.cache-act.outputs.cache-hit != 'true'
+        run: |
+            cd likelihood/act-dr6-lens/
+            ./get-act-data.sh
+
+      - name: ACT DR6 Lensing
+        shell: bash -l {0}
+        run: |
+          source cosmosis-configure
+          cosmosis examples/act-dr6-lens.ini | tee output/act-dr6.log
+          grep -e 'Likelihood =  -9.89' -e 'Likelihood =  -9.90' output/act-dr6.log
+
+      - name: DES Y3 6x2pt
+        shell: bash -l {0}
+        run: |
+          source cosmosis-configure
+          cosmosis examples/des-y3-6x2.ini
+
+      - name: Euclid emulator
+        shell: bash -l {0}
+        run: |
+          source cosmosis-configure
+          cosmosis examples/euclid-emulator.ini
+          test -f output/euclid-emulator/matter_power_nl/p_k.txt
+
+      - name: Log w example
+        shell: bash -l {0}
+        run: |
+          source cosmosis-configure
+          cosmosis examples/w_model.ini | tee output/w_model.log
 
       - name: Run Demos
         shell: bash -l {0}
