@@ -1,41 +1,22 @@
 name: tdcosmo
-version: '2023'
+version: '2020'
 purpose: Likelihood of the TDCOSMO IV analysis
 url: 10.1051/0004-6361/202038861
 interface: tdcosmo_likelihood.py
 attribution:
   - TDCOSMO IV (Birrer et al.) for the measurement
-  - Martin Millon, Judit Prat and Simon Birrer for the cosmoSIS implementation
+  - TBD for the cosmoSIS implementation
 rules: None.
 cite:
-  - Birrer et al., 2020, A&A, 643, A165
-  - Suyu et al., 2010, ApJ, 711, 201
-  - Suyu et al., 2014, ApJ, 788, L35
-  - Wong et al., 2017, MNRAS, 465, 4895
-  - Birrer et al., 2019, MNRAS, 484, 4726
-  - Chen et al., 2019, MNRAS, 490, 1743
-  - Jee et al., 2019, Science, 365, 1134
-  - Rusu et al., 2020, MNRAS, 498, 1440
-  - Wong et al., 2020, MNRAS, 498, 1420
-  - Sahjib et al., 2020, MNRAS, 494, 6072
+  -
 assumptions:
-  -   Strong lensing modelling details.
-  -   Time delay distance structure
-  -   Hierarchical inference of the mass model and stellar anisotropy parameters
+  -
 explanation:
-  - "
-    This module contain the likelihood of a 7 time-delay lenses, presented in TDCOSMO IV (Birrer et al., 2020).
-    This module allows us to reproduce the hierarchical inference of the cosmological parameters and of the lens population parameters,
-    which are grouped under the block `nuisance_strong_lensing` (see details below). 
-    
-    Additional data sets such as 'SLACS_SDSS' and 'SLACS_IFU' can be added to the 'tdcosmo7' data set to help constrain these parameters.
-    Adding these 2 data sets requires to make the additional assumption that the lensing galaxy of the 7 TDCOSMO lenses and of the SLACS lenses 
-    come from the same population of galaxies.
-    "
+  -
 
 params:
   data_sets:
-    meaning: Data sets to use. Choose any combination of 'tdcosmo7', 'SLACS_SDSS' and 'SLACS_IFU'. You can use 'tdcosmo7+SLACS_SDSS' or 'tdcosmo7+SLACS_SDSS+SLACS_IFU' for example.
+    meaning: Data sets to use. Choose any combination of 'tdcosmo7', 'SLACS_SDSS' and 'SLACS_IFU'. You can use 'tdcosmo+SLAC_SDSS' if you want.
     type: str
     default: 'tdcosmo7'
 
@@ -44,19 +25,28 @@ params:
     type: int
     default: 200
 
-  distances_computation_module:
-    meaning: Module used distance-redshift relation. 'astropy' uses standard astropy cosmology w0waCDM. 
-              'CosmoInterp' to use the CosmoInterp module of lenstronomy to interpolate. 'camb' will use the distances 
-              provided by camb to compute Ds, Dd, and Dds.
+  #todo : Is the cosmological model defined here ??
+  cosmo_model:
+    meaning: Cosmological model
     type: str
-    default: 'astropy'
+    default: 'LambdaCDM'
 
 inputs:
+  #  distances:
+  #    z:
+  #      meaning: Redshifts of samples
+  #      type: real 1d
+  #      default:
+  #    d_a:
+  #      meaning: Angular diameter distance in Mpc
+  #      type: real 1d
+  #      default:
+
   cosmological_parameters:
     omega_l:
       meaning: Dark energy density fraction today
       type: real
-      default:
+      default: 0.0
     h0:
       meaning: Hubble parameter H0 (km/s/Mpc)
       type: real
@@ -66,7 +56,7 @@ inputs:
       type: real
       default:
 
-  nuisance_strong_lensing:
+  nuisance_lensing:
     lambda_mst:
       meaning: Internal Mass sheet degeneracy parameter
       type: real
@@ -94,7 +84,7 @@ inputs:
 
 outputs:
   likelihoods:
-    TDCOSMO_like:
+    tdcosmo_like:
       meaning: Total likelihood of the TDCOSMO sample
       type: real
 
