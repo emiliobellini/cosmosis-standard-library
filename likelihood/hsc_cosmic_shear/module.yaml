@@ -1,23 +1,21 @@
-name: sacc_like
+name: hsc_cosmic_shear
 version: '1'
-purpose: Generic 2-point measurement Gaussian likelihood using sacc format
+purpose: Likelihoods of the HSC Year 3 cosmic shear data
 url: ''
-interface: 2pt_like.py
-attribution: [CosmoSIS Team, Niall Maccrann]
+interface: hsc_cosmic_shear_like.py
+attribution: [HSC Collaboration (data), Roohi Dalal, Xiangchong]
 rules: None.
-cite: []
+cite: [https://doi.org/10.48550/arXiv.2304.00701]
 assumptions:
--   A Gaussian likelihood approximation for two-point measurements
--   Data supplied in a specific file format
+    - HSC measurements of cosmic shear power spectra
 
 explanation: |
-    "This module implements a general likelihood of tomographic 2-point measuremnts
-    of various quantities, including galaxy density, cosmic shear, intrinsic alignments,
-    CMB lensing, and the various cross powers between these.
+    Dalal et al presented measuremets of the cosmic shear E-mode power spectrum
+    made using three years of data from the  Hyper Suprime-Cam (HSC) survey.
+    This module implements the likelihood of that data, using the sacc format.
+    This module is a subclass of the sacc_like likelihood in likelihood/sacc_like.
+    See the documentation for that module for more details.
 
-    This is a first version of a general code using the SACC format developed for DESC.
-    See github.com/LSSTDESC/sacc for more details
-    "
 params:
     data_file:
         meaning: Filename of the sacc file to use.
