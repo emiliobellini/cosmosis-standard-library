@@ -1,7 +1,7 @@
 import numpy as np
 import copy
 import pickle
-import tqdm
+import progressbar
 import hashlib
 from ._version import __version__
 from .utils import *

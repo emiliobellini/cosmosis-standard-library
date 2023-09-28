@@ -1,7 +1,7 @@
 import numpy as np
 import copy
 import pickle
-import tqdm
+import progressbar
 import hashlib
 from ._version import __version__
 
@@ -68,10 +68,11 @@ class MyProgressBar():
 
     def __call__(self, block_num, block_size, total_size):
         if not self.pbar:
-            self.pbar=tqdm.trange(total_size)
-            self.pbar.set_description("Downloading")
+            self.pbar=progressbar.ProgressBar(maxval=total_size)
+            self.pbar.start()
+
         downloaded = block_num * block_size
         if downloaded < total_size:
             self.pbar.update(downloaded)
         else:
-            self.pbar.close()
+            self.pbar.finish()
