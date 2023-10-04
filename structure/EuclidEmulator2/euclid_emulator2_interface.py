@@ -50,7 +50,7 @@ def execute(block, config):
     if len(z) > 100:
         raise ValueError("EuclidEmulator2 only allows up to 100 redshift values")
 
-    _, b = emulator.get_boost(params, z, k)
+    _, b = ee2.get_boost(params, z, k)
 
     # Not sure why but b comes back as a dictionary of arrays
     # instead of a 2D array
