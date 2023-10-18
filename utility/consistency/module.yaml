@@ -26,59 +26,11 @@ explanation: |
     parameter, and vice versa.  This is off by default as it's a little slower.
     It uses the camb code directly so should match up.
 
-    The below relations are used by default. These can either be replaced entirely by
-    those in a file given by the relations_file setup parameter or added to as a comma
-    separated list using the extra_relations setup parameter.
+    The standard set of relations is in consistency.py and relates the standard LCDM
+    parameters, including massive neutrinos.
 
-    omega_m=ommh2/h/h
+    It also converts log1e10As or A_s_1e9 to A_s, and (S_8, Omega_m) to (sigma_8, Omega_m).
 
-    omega_b=ombh2/h/h
-
-    omega_c=omch2/h/h
-
-    omega_nu=omnuh2/h/h
-
-    ommh2=omega_m*h*h
-
-    ombh2=omega_b*h*h
-
-    omch2=omega_c*h*h
-
-    omnuh2=omega_nu*h*h
-
-    omch2=ommh2-ombh2
-
-    ommh2=omch2+ombh2
-
-    baryon=omega_b/omega_m
-
-    omega_b=omega_m*baryon_fraction
-
-    omega_m=omega_b/baryon_fraction
-
-    baryon_fraction=ombh2/ommh2
-
-    ombh2=ommh2*baryon_fraction
-
-    ommh2=ombh2/baryon_fraction
-
-    omega_m=omega_b+omega_c
-
-    h=hubble/100
-
-    hubble=h*100
-
-    omega_lambda=1-omega_m-omega_k-omega_nu
-
-    omega_m=1-omega_lambda-omega_k-omega_nu
-
-    omega_k=1-omega_m-omega_lambda-omega_nu
-
-    omega_nu=1-omega_m-omega_lambda-omega_k
-
-    mnu=omnuh2*93.14
-
-    omnuh2=mnu/93.14
 
 params:
     verbose:
