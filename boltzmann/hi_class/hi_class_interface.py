@@ -83,7 +83,7 @@ def setup(options):
             config[key] = options[option_section, key]
             # HI_CLASS_NEW: classy does not like True/False as inputs, we
             # need to reconvert them back to yes/no
-            if type(config[key]) == bool:
+            if isinstance(config[key], bool):
                 config[key] = 'yes' if config[key] else 'no'
 
     # Create the object that connects to Class
@@ -379,7 +379,8 @@ def get_class_outputs(block, c, config, params):
         # Save each of the four spectra
         if config['lensing']:
             for s in ['pp']:
-                block[cmb_cl, s] = np.nan_to_num(c_ell_data[s][2:]/2/np.pi*ell*(ell+1.0))
+                block[cmb_cl, s] = np.nan_to_num(
+                    c_ell_data[s][2:]/2/np.pi*ell*(ell+1.0))
 
         for s in ['tt', 'ee', 'te', 'bb']:
             block[cmb_cl, s] = np.nan_to_num(c_ell_data[s][2:] * f)
