@@ -210,6 +210,37 @@ def get_class_inputs(block, config):
         if key.startswith('class_'):
             params[key[6:]] = val
 
+    # Modify params if the input is binning derivatives
+    if params['expansion_model'] == 'binning_der_domega':
+        params['expansion_model'] = 'binning_domega'
+        z_vec = floatify_array(params['binning_z_smg'])
+        domega = floatify_array(params['binning_domega_smg'])
+        r = params['binning_rel_width_smg']
+        domega = tanh_from_derivs(z_vec, domega[0], domega[1:], r)
+        params['binning_domega_smg'] = stringify_array(domega)
+
+    if params['gravity_model'] == 'binning_der_alphas':
+        params['gravity_model'] = 'binning_alphas'
+        z_vec = floatify_array(params['binning_z_smg'])
+        bra = floatify_array(params['binning_braiding_smg'])
+        run = floatify_array(params['binning_running_smg'])
+        r = params['binning_rel_width_smg']
+        bra = tanh_from_derivs(z_vec, bra[0], bra[1:], r)
+        run = tanh_from_derivs(z_vec, run[0], run[1:], r)
+        params['binning_braiding_smg'] = stringify_array(bra)
+        params['binning_running_smg'] = stringify_array(run)
+
+    if params['gravity_model'] == 'binning_der_M2cs2':
+        params['gravity_model'] = 'binning_M2cs2'
+        z_vec = floatify_array(params['binning_z_smg'])
+        dM2 = floatify_array(params['binning_dM2_smg'])
+        dcs2 = floatify_array(params['binning_dcs2_smg'])
+        r = params['binning_rel_width_smg']
+        dM2 = tanh_from_derivs(z_vec, dM2[0], dM2[1:], r)
+        dcs2 = tanh_from_derivs(z_vec, dcs2[0], dcs2[1:], r)
+        params['binning_dM2_smg'] = stringify_array(dM2)
+        params['binning_dcs2_smg'] = stringify_array(dcs2)
+
     return params
 
 
@@ -464,3 +495,30 @@ def get_varying_params(ini_values):
         if len(val) == 3:
             list_params.append((sec, key))
     return list_params
+
+
+def floatify_array(string_array):
+    array = string_array.split(",")
+    array = [float(x) for x in array]
+    return np.array(array)
+
+
+def stringify_array(array):
+    string_array = [str(x) for x in array]
+    string_array = ", ".join(string_array)
+    return string_array
+
+
+def tanh_from_derivs(x_nodes, y0, yp_nodes, rel_width):
+    y_nodes = np.ones_like(x_nodes)
+    y_nodes[0] = y0
+    for num, _ in enumerate(yp_nodes):
+        w = rel_width*(x_nodes[num] - x_nodes[num+1])
+        # This is assuming that derivatives are w.r.t. z
+        # y_nodes[num+1] = y_nodes[num] - 2.*w*yp_nodes[num]
+        # This is assuming that derivatives are dln(fun)/dln(a)
+        # It should work better, but I have to test it
+        zm = (x_nodes[num] + x_nodes[num+1])/2.
+        y_nodes[num+1] = \
+            (1+zm+w*yp_nodes[num])/(1+zm-w*yp_nodes[num])*y_nodes[num]
+    return y_nodes
