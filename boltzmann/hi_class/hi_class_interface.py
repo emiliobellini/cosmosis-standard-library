@@ -515,10 +515,10 @@ def tanh_from_derivs(x_nodes, y0, yp_nodes, rel_width):
     for num, _ in enumerate(yp_nodes):
         w = rel_width*(x_nodes[num] - x_nodes[num+1])
         # This is assuming that derivatives are w.r.t. z
-        # y_nodes[num+1] = y_nodes[num] - 2.*w*yp_nodes[num]
+        y_nodes[num+1] = y_nodes[num] - 2.*w*yp_nodes[num]
         # This is assuming that derivatives are dln(fun)/dln(a)
         # It should work better, but I have to test it
-        zm = (x_nodes[num] + x_nodes[num+1])/2.
-        y_nodes[num+1] = \
-            (1+zm+w*yp_nodes[num])/(1+zm-w*yp_nodes[num])*y_nodes[num]
+        # zm = (x_nodes[num] + x_nodes[num+1])/2.
+        # y_nodes[num+1] = \
+        #     (1+zm+w*yp_nodes[num])/(1+zm-w*yp_nodes[num])*y_nodes[num]
     return y_nodes
