@@ -216,7 +216,7 @@ def get_class_inputs(block, config):
         z_vec = floatify_array(params['binning_z_smg'])
         domega = floatify_array(params['binning_domega_smg'])
         r = params['binning_rel_width_smg']
-        domega = tanh_from_derivs(z_vec, domega[0], domega[1:], r)
+        domega = tanh_from_derivs(z_vec, domega[0], domega[1:])
         params['binning_domega_smg'] = stringify_array(domega)
 
     if params['gravity_model'] == 'binning_der_alphas':
@@ -225,8 +225,8 @@ def get_class_inputs(block, config):
         bra = floatify_array(params['binning_braiding_smg'])
         run = floatify_array(params['binning_running_smg'])
         r = params['binning_rel_width_smg']
-        bra = tanh_from_derivs(z_vec, bra[0], bra[1:], r)
-        run = tanh_from_derivs(z_vec, run[0], run[1:], r)
+        bra = tanh_from_derivs(z_vec, bra[0], bra[1:])
+        run = tanh_from_derivs(z_vec, run[0], run[1:])
         params['binning_braiding_smg'] = stringify_array(bra)
         params['binning_running_smg'] = stringify_array(run)
 
@@ -236,8 +236,8 @@ def get_class_inputs(block, config):
         dM2 = floatify_array(params['binning_dM2_smg'])
         dcs2 = floatify_array(params['binning_dcs2_smg'])
         r = params['binning_rel_width_smg']
-        dM2 = tanh_from_derivs(z_vec, dM2[0], dM2[1:], r)
-        dcs2 = tanh_from_derivs(z_vec, dcs2[0], dcs2[1:], r)
+        dM2 = tanh_from_derivs(z_vec, dM2[0], dM2[1:])
+        dcs2 = tanh_from_derivs(z_vec, dcs2[0], dcs2[1:])
         params['binning_dM2_smg'] = stringify_array(dM2)
         params['binning_dcs2_smg'] = stringify_array(dcs2)
 
