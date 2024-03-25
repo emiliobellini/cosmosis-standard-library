@@ -509,16 +509,11 @@ def stringify_array(array):
     return string_array
 
 
-def tanh_from_derivs(x_nodes, y0, yp_nodes, rel_width):
+def tanh_from_derivs(x_nodes, y0, yp_nodes):
     y_nodes = np.ones_like(x_nodes)
+    # First node is maximum z
     y_nodes[0] = y0
     for num, _ in enumerate(yp_nodes):
-        w = rel_width*(x_nodes[num] - x_nodes[num+1])
-        # This is assuming that derivatives are w.r.t. z
-        y_nodes[num+1] = y_nodes[num] - 2.*w*yp_nodes[num]
-        # This is assuming that derivatives are dln(fun)/dln(a)
-        # It should work better, but I have to test it
-        # zm = (x_nodes[num] + x_nodes[num+1])/2.
-        # y_nodes[num+1] = \
-        #     (1+zm+w*yp_nodes[num])/(1+zm-w*yp_nodes[num])*y_nodes[num]
+        # Derivatives are w.r.t. z
+        y_nodes[num+1] = y_nodes[num] + yp_nodes[num]*(x_nodes[num+1] - x_nodes[num])
     return y_nodes
