@@ -1,0 +1,65 @@
+name: desi_lyaQSO
+version: ""
+purpose: Compute the likelihood of DESI from Lyman-alpha QSO
+url: ""
+interface: desi_lyaQSO.py
+attribution: ""
+rules: ""
+cite: 
+    - "arXiv 2404.03000 DESI III"
+    - "arXiv 2404.03002 DESI VI"
+assumptions:
+    - "Gaussian likelihood, same likeliihod as for eBOSS"
+
+explanation: >
+        "This module computes the likelihood of Dm_over_rd and Dh_over_rd for BAO-only analysis, using DESI DR1 measurements from LRG + ELG (see table 18 in 2404.03000). 
+        We assume likelihoods are Gaussian."
+params:
+    feedback:
+        type: bool
+        meaning: Whether to print feedback
+        default: False
+    mode:
+        meaning: type of analysis. 0 for BAO-only. 1 for BAO + Full-shape
+        default: 0
+        type: int
+
+inputs: 
+    distances:
+        z:
+            meaning: Redshifts of samples
+            type: real 1d
+            default:
+        d_m:
+            meaning: Comoving distance in Mpc
+            type: real 1d
+            default:
+        h:
+            meaning: Hubble parameter with in units of Mpc
+            type: real 1d
+            default:
+        rs_zdrag:
+            meaning: Value of predicted drag redshift
+            type: real
+            default:
+    growth_parameters:
+        d_z:
+            meaning: Linear growth factor D(z)
+            type: real 1d
+            default:
+        fsigma8:
+            meaning: Structure amplitude
+            type: real 1d
+            default:
+        z:
+            meaning: Redshift of samples
+            type: real 1d
+            default:
+
+
+outputs:
+    likelihoods:
+        desi_lyaQSO_like:
+            meaning: likelihood of BAO
+            type: real
+

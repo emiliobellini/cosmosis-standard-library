@@ -1,0 +1,2 @@
+1.32   27.79   DM_over_rs
+1.32   13.82   DH_over_rs

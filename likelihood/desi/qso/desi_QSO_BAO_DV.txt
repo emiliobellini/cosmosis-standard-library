@@ -1,0 +1,2 @@
+0.30 7.93 DV_over_rs BGS
+1.49 26.07 DV_over_rs QSO
