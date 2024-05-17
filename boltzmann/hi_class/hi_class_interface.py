@@ -211,35 +211,35 @@ def get_class_inputs(block, config):
             params[key[6:]] = val
 
     # Modify params if the input is binning derivatives
-    if params['expansion_model'] == 'binning_der_domega':
-        params['expansion_model'] = 'binning_domega'
-        z_vec = floatify_array(params['binning_z_smg'])
-        domega = floatify_array(params['binning_domega_smg'])
-        r = params['binning_rel_width_smg']
-        domega = tanh_from_derivs(z_vec, domega[0], domega[1:])
-        params['binning_domega_smg'] = stringify_array(domega)
+    # if params['expansion_model'] == 'binning_der_domega':
+    #     params['expansion_model'] = 'binning_domega'
+    #     z_vec = floatify_array(params['binning_z_smg'])
+    #     domega = floatify_array(params['binning_domega_smg'])
+    #     r = params['binning_rel_width_smg']
+    #     domega = tanh_from_derivs(z_vec, domega[0], domega[1:])
+    #     params['binning_domega_smg'] = stringify_array(domega)
 
-    if params['gravity_model'] == 'binning_der_alphas':
-        params['gravity_model'] = 'binning_alphas'
-        z_vec = floatify_array(params['binning_z_smg'])
-        bra = floatify_array(params['binning_braiding_smg'])
-        run = floatify_array(params['binning_running_smg'])
-        r = params['binning_rel_width_smg']
-        bra = tanh_from_derivs(z_vec, bra[0], bra[1:])
-        run = tanh_from_derivs(z_vec, run[0], run[1:])
-        params['binning_braiding_smg'] = stringify_array(bra)
-        params['binning_running_smg'] = stringify_array(run)
+    # if params['gravity_model'] == 'binning_der_alphas':
+    #     params['gravity_model'] = 'binning_alphas'
+    #     z_vec = floatify_array(params['binning_z_smg'])
+    #     bra = floatify_array(params['binning_braiding_smg'])
+    #     run = floatify_array(params['binning_running_smg'])
+    #     r = params['binning_rel_width_smg']
+    #     bra = tanh_from_derivs(z_vec, bra[0], bra[1:])
+    #     run = tanh_from_derivs(z_vec, run[0], run[1:])
+    #     params['binning_braiding_smg'] = stringify_array(bra)
+    #     params['binning_running_smg'] = stringify_array(run)
 
-    if params['gravity_model'] == 'binning_der_M2cs2':
-        params['gravity_model'] = 'binning_M2cs2'
-        z_vec = floatify_array(params['binning_z_smg'])
-        dM2 = floatify_array(params['binning_dM2_smg'])
-        dcs2 = floatify_array(params['binning_dcs2_smg'])
-        r = params['binning_rel_width_smg']
-        dM2 = tanh_from_derivs(z_vec, dM2[0], dM2[1:])
-        dcs2 = tanh_from_derivs(z_vec, dcs2[0], dcs2[1:])
-        params['binning_dM2_smg'] = stringify_array(dM2)
-        params['binning_dcs2_smg'] = stringify_array(dcs2)
+    # if params['gravity_model'] == 'binning_der_M2cs2':
+    #     params['gravity_model'] = 'binning_M2cs2'
+    #     z_vec = floatify_array(params['binning_z_smg'])
+    #     dM2 = floatify_array(params['binning_dM2_smg'])
+    #     dcs2 = floatify_array(params['binning_dcs2_smg'])
+    #     r = params['binning_rel_width_smg']
+    #     dM2 = tanh_from_derivs(z_vec, dM2[0], dM2[1:])
+    #     dcs2 = tanh_from_derivs(z_vec, dcs2[0], dcs2[1:])
+    #     params['binning_dM2_smg'] = stringify_array(dM2)
+    #     params['binning_dcs2_smg'] = stringify_array(dcs2)
 
     return params
 
@@ -252,15 +252,15 @@ def get_class_outputs(block, c, config, params):
     h0 = block[cosmo, 'h0']
 
     # Omega_smg
-    if params['expansion_model'] == 'spline_domega':
-        z_sample = params['spline_z_smg']
-    elif params['expansion_model'] == 'binning_domega':
-        z_sample = params['binning_z_smg']
-    elif params['expansion_model'] == 'domega_spline':
-        z_sample = params['back_spline_z_smg']
-    z_sample = z_sample.split(',')
-    z_sample = [float(z) for z in z_sample]
-    block[cosmo, 'omega_de'] = [c.Omega_smg(z) for z in z_sample]
+    # if params['expansion_model'] == 'spline_domega':
+    #     z_sample = params['spline_z_smg']
+    # elif params['expansion_model'] == 'binning_domega':
+    #     z_sample = params['binning_z_smg']
+    # elif params['expansion_model'] == 'domega_spline':
+    #     z_sample = params['back_spline_z_smg']
+    # z_sample = z_sample.split(',')
+    # z_sample = [float(z) for z in z_sample]
+    # block[cosmo, 'omega_de'] = [c.Omega_smg(z) for z in z_sample]
 
     ##
     # Matter power spectrum
