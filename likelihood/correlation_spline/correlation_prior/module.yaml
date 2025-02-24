@@ -25,6 +25,26 @@ params:
         meaning: number of spline nodes (including anchor)
         default: 10
         type: int
+    delta:
+        meaning: lenght of the interval in scale factor
+        default: 0.1
+        type: real 1d
+    amin:
+        meaning: cut in scale factor
+        default: 0.1
+        type: real 1d
+    amax:
+        meaning: cut in scale factor
+        default: 1.
+        type: real 1d
+    sigma:
+        meaning: estimated error on Omega mean
+        default: 0.3
+        type: real 1d
+    ac:
+        meaning: correlation lenght
+        default: 0.3
+        type: real 1d
 
 inputs: 
     cosmological_parameters:
