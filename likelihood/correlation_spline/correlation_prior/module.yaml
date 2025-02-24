@@ -1,0 +1,72 @@
+name: correlation_prior
+version: ""
+purpose: Compute the correlation prior for spline reconstruction
+url: ""
+interface: correlation_prior.py
+attribution: ""
+rules: ""
+cite: 
+    - "arXiv 1112.1693"
+assumptions:
+    - "Gaussian likelihood"
+
+explanation: >
+        "This module computes the .... TO DO"
+params:
+    feedback:
+        type: bool
+        meaning: Whether to print feedback
+        default: False
+    mode:
+        meaning: type of prior. 0 for theoretical fiducial, 1 for Gaussian kernel
+        default: 0
+        type: int
+    n_points:
+        meaning: number of spline nodes (including anchor)
+        default: 10
+        type: int
+
+inputs: 
+    cosmological_parameters:
+        omega_de:
+            meaning: Omega dark energy at different redshifts
+            type: real 1d
+            default:
+    # distances:
+    #     z:
+    #         meaning: Redshifts of samples
+    #         type: real 1d
+    #         default:
+    #     d_m:
+    #         meaning: Comoving distance in Mpc
+    #         type: real 1d
+    #         default:
+    #     h:
+    #         meaning: Hubble parameter with in units of Mpc
+    #         type: real 1d
+    #         default:
+    #     rs_zdrag:
+    #         meaning: Value of predicted drag redshift
+    #         type: real
+    #         default:
+    # growth_parameters:
+    #     d_z:
+    #         meaning: Linear growth factor D(z)
+    #         type: real 1d
+    #         default:
+    #     fsigma8:
+    #         meaning: Structure amplitude
+    #         type: real 1d
+    #         default:
+    #     z:
+    #         meaning: Redshift of samples
+    #         type: real 1d
+    #         default:
+
+
+outputs:
+    likelihoods:
+        correlation_prior_like:
+            meaning: correlation prior
+            type: real
+
