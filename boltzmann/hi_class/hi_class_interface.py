@@ -206,9 +206,24 @@ def get_class_inputs(block, config):
         # (e.g. the parser is case insensitive).
         try_to_change_name(params, 'use_sigma', 'use_Sigma')
 
+    # print(params)
+    # if block.has_value(cosmo, 'Omega_Lambda') and block[cosmo, 'Omega_Lambda'] == 0.:
+
+        # params['Omega_Lambda'] = block[cosmo, 'omega_lambda']
+        # params['Omega_smg'] = block[cosmo, 'omega_smg']
+        # params['Omega_fld'] = block[cosmo, 'omega_fld']
+
+    params['Omega_Lambda'] = block[cosmo, 'omega_lambda']
+    params['Omega_scf'] = block[cosmo, 'omega_scf']
+    # params['Omega_fld'] = block[cosmo, 'omega_fld']
+
+    try_to_get_arrays_class(params, block, 'spline_z_fld')
+    try_to_get_arrays_class(params, block, 'spline_domega_fld')
+
     for key, val in config.items():
         if key.startswith('class_'):
             params[key[6:]] = val
+    # print(params)
 
     # Modify params if the input is binning derivatives
     # if params['expansion_model'] == 'binning_der_domega':
@@ -386,6 +401,9 @@ def get_class_outputs(block, c, config, params):
     block[distances, 'mu'] = mu
     H = np.array([c.Hubble(zi) for zi in z])
     block[distances, 'H'] = H
+
+    d_v = ((1 + z)**2 * z * d_a**2 / H)**(1./3.)
+    block[distances, 'd_v'] = d_v
 
     # Save some auxiliary related parameters
     block[distances, 'age'] = c.age()

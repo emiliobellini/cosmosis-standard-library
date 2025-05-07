@@ -130,6 +130,9 @@ outputs:
         d_l:
             meaning: Luminosity distance in Mpc
             type: real 1d
+        d_v:
+            meaning: Angular average of comoving angular diameter and line of sight distance in Mpc
+            type: real 1d
         mu:
             meaning: Distance modulus
             type: real 1d
